@@ -30,19 +30,37 @@
         android:visibility="gone"
         android:fitsSystemWindows="true">
         
-        <EditText
-            android:id="@+id/searchInput"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Search apps..."
-            android:textColor="#FFFFFF"
-            android:textColorHint="#888888"
-            android:background="@android:color/transparent"
-            android:padding="16dp"
-            android:textSize="18sp"
-            android:singleLine="true"
-            android:imeOptions="actionGo"
-            android:inputType="text" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:id="@+id/settingsIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_settings"
+                android:contentDescription="Settings"
+                android:tint="#FFFFFF" />
+
+            <EditText
+                android:id="@+id/searchInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:hint="Search apps..."
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:background="@android:color/transparent"
+                android:textSize="18sp"
+                android:singleLine="true"
+                android:imeOptions="actionGo"
+                android:inputType="text" />
+
+        </LinearLayout>
         
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/appsRecyclerView"

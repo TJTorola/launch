@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var widgetHost: LauncherAppWidgetHost
     private lateinit var widgetManagerHelper: WidgetManagerHelper
     private lateinit var gridOverlay: GridOverlayView
+    private lateinit var settingsIcon: ImageView
     private var isAppDrawerVisible = false
     private var isWidgetEditMode = false
 
@@ -70,7 +71,13 @@ class MainActivity : AppCompatActivity() {
         searchInput = findViewById(R.id.searchInput)
         appsRecyclerView = findViewById(R.id.appsRecyclerView)
         widgetContainer = findViewById(R.id.widgetContainer)
+        settingsIcon = findViewById(R.id.settingsIcon)
         appsRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        settingsIcon.setOnClickListener {
+            val intent = Intent(this, SettingsActivity::class.java)
+            startActivity(intent)
+        }
         
         // Initialize widget host
         widgetHost = LauncherAppWidgetHost(this, WidgetManagerHelper.APPWIDGET_HOST_ID)
@@ -445,15 +452,6 @@ class MainActivity : AppCompatActivity() {
         val shortcuts = loadShortcuts()
         apps.addAll(shortcuts)
 
-        // Add Launch Settings as a special item
-        apps.add(AppInfo(
-            label = "Launch Settings",
-            packageName = "dev.torola.launch.SETTINGS",
-            className = "",
-            icon = packageManager.defaultActivityIcon,
-            isSettings = true
-        ))
-
         // Filter out hidden apps
         val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
         val hiddenApps = prefs.getStringSet("hidden_list", emptySet()) ?: emptySet()
@@ -500,14 +498,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun launchApp(appInfo: AppInfo) {
         try {
-            // Check if this is the settings item
-            if (appInfo.isSettings) {
-                val intent = Intent(this, SettingsActivity::class.java)
-                startActivity(intent)
-                hideAppDrawer()
-                return
-            }
-            
             // Check if this is a shortcut (packageName starts with "shortcut_")
             if (appInfo.packageName.startsWith("shortcut_")) {
                 val prefs = getSharedPreferences("shortcuts", Context.MODE_PRIVATE)
@@ -546,11 +536,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showUninstallDialog(appInfo: AppInfo) {
-        // Don't show options for Launch Settings
-        if (appInfo.isSettings) {
-            return
-        }
-
         val options = mutableListOf<String>()
         options.add("Hide from list")
 
