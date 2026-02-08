@@ -24,6 +24,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var shortcutsAdapter: ShortcutsAdapter
     private lateinit var selectWallpaperButton: Button
     private lateinit var clearWallpaperButton: Button
+    private lateinit var manageWidgetsButton: Button
     
     // Activity result launcher for image picker
     private val imagePickerLauncher = registerForActivityResult(
@@ -53,6 +54,7 @@ class SettingsActivity : AppCompatActivity() {
         emptyStateText = findViewById(R.id.emptyStateText)
         selectWallpaperButton = findViewById(R.id.selectWallpaperButton)
         clearWallpaperButton = findViewById(R.id.clearWallpaperButton)
+        manageWidgetsButton = findViewById(R.id.manageWidgetsButton)
         
         shortcutsRecyclerView.layoutManager = LinearLayoutManager(this)
         
@@ -64,6 +66,11 @@ class SettingsActivity : AppCompatActivity() {
         // Setup clear wallpaper button
         clearWallpaperButton.setOnClickListener {
             removeWallpaper()
+        }
+        
+        // Setup manage widgets button
+        manageWidgetsButton.setOnClickListener {
+            openWidgetManagement()
         }
         
         // Handle back button press
@@ -191,6 +198,11 @@ class SettingsActivity : AppCompatActivity() {
         
         // Reload the list
         loadShortcuts()
+    }
+    
+    private fun openWidgetManagement() {
+        val intent = Intent(this, WidgetManagementActivity::class.java)
+        startActivity(intent)
     }
 }
 

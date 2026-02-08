@@ -14,7 +14,12 @@
         android:contentDescription="Wallpaper background"
         android:visibility="gone" />
 
-    <!-- Empty home screen - just blank -->
+    <!-- Widget container for home screen widgets -->
+    <FrameLayout
+        android:id="@+id/widgetContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fitsSystemWindows="true" />
     
     <!-- App drawer - hidden by default -->
     <LinearLayout

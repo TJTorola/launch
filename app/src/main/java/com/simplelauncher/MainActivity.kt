@@ -45,6 +45,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appsRecyclerView: RecyclerView
     private lateinit var appsAdapter: AppsAdapter
     private lateinit var wallpaperImageView: ImageView
+    private lateinit var widgetContainer: FrameLayout
+    private lateinit var widgetHost: LauncherAppWidgetHost
+    private lateinit var widgetManagerHelper: WidgetManagerHelper
     private var isAppDrawerVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,11 +67,17 @@ class MainActivity : AppCompatActivity() {
         appDrawerLayout = findViewById(R.id.appDrawerLayout)
         searchInput = findViewById(R.id.searchInput)
         appsRecyclerView = findViewById(R.id.appsRecyclerView)
+        widgetContainer = findViewById(R.id.widgetContainer)
         appsRecyclerView.layoutManager = LinearLayoutManager(this)
+        
+        // Initialize widget host
+        widgetHost = LauncherAppWidgetHost(this, WidgetManagerHelper.APPWIDGET_HOST_ID)
+        widgetManagerHelper = WidgetManagerHelper(this)
         
         loadApps()
         setupSearchInput()
         loadWallpaper()
+        loadWidgets()
         
         gestureDetector = GestureDetectorCompat(this, SwipeGestureListener())
         
@@ -80,6 +89,20 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         // Reload wallpaper when returning to launcher (e.g., after changing it in settings)
         loadWallpaper()
+        // Reload widgets in case they were added/removed
+        loadWidgets()
+    }
+    
+    override fun onStart() {
+        super.onStart()
+        // Start listening for widget updates
+        widgetHost.startListeningIfResumed()
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        // Stop listening for widget updates
+        widgetHost.stopListeningIfNeeded()
     }
     
     private fun loadWallpaper() {
@@ -116,6 +139,71 @@ class MainActivity : AppCompatActivity() {
         
         // No wallpaper set, hide the ImageView (black background will show)
         wallpaperImageView.visibility = View.GONE
+    }
+    
+    private fun loadWidgets() {
+        // Clear existing widgets
+        widgetContainer.removeAllViews()
+        
+        val prefs = getSharedPreferences("widgets", Context.MODE_PRIVATE)
+        val widgetIds = prefs.getStringSet("widget_list", emptySet()) ?: emptySet()
+        val failedWidgets = mutableListOf<String>()
+        
+        for (idString in widgetIds) {
+            val widgetId = idString.toIntOrNull() ?: continue
+            val widgetInfo = widgetManagerHelper.getWidgetInfo(widgetId)
+            
+            if (widgetInfo == null) {
+                // Widget provider no longer available
+                failedWidgets.add(idString)
+                continue
+            }
+            
+            try {
+                // Create widget view
+                val widgetView = widgetHost.createView(
+                    applicationContext,
+                    widgetId,
+                    widgetInfo
+                )
+                
+                // Set widget size based on provider info
+                val widthDp = widgetInfo.minWidth
+                val heightDp = widgetInfo.minHeight
+                
+                // Convert dp to pixels
+                val density = resources.displayMetrics.density
+                val widthPx = (widthDp * density).toInt()
+                val heightPx = (heightDp * density).toInt()
+                
+                // Create layout params
+                val layoutParams = FrameLayout.LayoutParams(widthPx, heightPx)
+                
+                // Position widgets vertically stacked for now (simple layout)
+                // In a full implementation, you'd want grid positioning
+                layoutParams.topMargin = widgetContainer.childCount * (heightPx + 16)
+                layoutParams.leftMargin = 16
+                
+                widgetView.layoutParams = layoutParams
+                
+                // Add to container
+                widgetContainer.addView(widgetView)
+            } catch (e: Exception) {
+                // Widget failed to load - log and mark for cleanup
+                android.util.Log.e("MainActivity", "Failed to load widget $widgetId: ${widgetInfo.provider}", e)
+                failedWidgets.add(idString)
+            }
+        }
+        
+        // Clean up failed widgets from preferences
+        if (failedWidgets.isNotEmpty()) {
+            val updatedWidgets = widgetIds.toMutableSet()
+            updatedWidgets.removeAll(failedWidgets.toSet())
+            prefs.edit().apply {
+                putStringSet("widget_list", updatedWidgets)
+                apply()
+            }
+        }
     }
     
     override fun onNewIntent(intent: Intent) {

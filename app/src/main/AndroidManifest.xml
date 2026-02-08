@@ -8,6 +8,9 @@
     <!-- Required to receive shortcut install requests -->
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
     
+    <!-- Required to bind widgets -->
+    <uses-permission android:name="android.permission.BIND_APPWIDGET" />
+    
     <!-- Optional: For accessing images on Android 13+ (API 33+) -->
     <!-- Note: Not strictly required since we use persistable URI permissions -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
@@ -49,6 +52,20 @@
         <!-- Wallpaper adjustment activity -->
         <activity
             android:name=".WallpaperAdjustActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SimpleLauncher" />
+        
+        <!-- Widget management activity -->
+        <activity
+            android:name=".WidgetManagementActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SimpleLauncher" />
+        
+        <!-- Widget picker activity -->
+        <activity
+            android:name=".WidgetPickerActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SimpleLauncher" />
