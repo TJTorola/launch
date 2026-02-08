@@ -1,14 +1,13 @@
 package dev.torola.launch
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -76,38 +75,20 @@ class HiddenAppsActivity : AppCompatActivity() {
             emptyStateText.visibility = View.GONE
 
             hiddenAppsAdapter = HiddenAppsAdapter(hiddenApps) { hiddenApp ->
-                showUnhideConfirmation(hiddenApp)
+                openAppOptions(hiddenApp)
             }
             hiddenAppsRecyclerView.adapter = hiddenAppsAdapter
         }
     }
 
-    private fun showUnhideConfirmation(hiddenApp: HiddenAppItem) {
-        AlertDialog.Builder(this)
-            .setTitle("Unhide App")
-            .setMessage("Do you want to show \"${hiddenApp.label}\" in the app list again?")
-            .setPositiveButton("Unhide") { _, _ ->
-                unhideApp(hiddenApp)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun unhideApp(hiddenApp: HiddenAppItem) {
-        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
-        val hiddenApps = prefs.getStringSet("hidden_list", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
-
-        hiddenApps.remove(hiddenApp.packageName)
-
-        prefs.edit().apply {
-            putStringSet("hidden_list", hiddenApps)
-            apply()
+    private fun openAppOptions(hiddenApp: HiddenAppItem) {
+        val intent = Intent(this, AppOptionsActivity::class.java).apply {
+            putExtra(AppOptionsActivity.EXTRA_PACKAGE_NAME, hiddenApp.packageName)
+            putExtra(AppOptionsActivity.EXTRA_CLASS_NAME, "")
+            putExtra(AppOptionsActivity.EXTRA_APP_LABEL, hiddenApp.label)
+            putExtra(AppOptionsActivity.EXTRA_IS_SHORTCUT, false)
         }
-
-        Toast.makeText(this, "\"${hiddenApp.label}\" unhidden", Toast.LENGTH_SHORT).show()
-
-        // Reload the list
-        loadHiddenApps()
+        startActivity(intent)
     }
 }
 
@@ -127,7 +108,7 @@ class HiddenAppsAdapter(
 
         fun bind(hiddenApp: HiddenAppItem) {
             appLabel.text = hiddenApp.label
-            deleteButton.text = "Unhide"
+            deleteButton.text = "Options"
             itemView.setOnClickListener {
                 onAppClick(hiddenApp)
             }
