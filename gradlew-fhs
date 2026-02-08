@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Kill any existing Gradle daemons first
+./gradlew --stop 2>/dev/null || true
+# Run gradle inside FHS environment
+/nix/store/gh0mm8qh0h4am220blwlkxn3mm0kc27a-android-env/bin/android-env ./gradlew "$@"

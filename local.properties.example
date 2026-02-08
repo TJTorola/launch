@@ -1,0 +1,5 @@
+# This file is auto-generated when you enter the nix shell
+# If you need to manually set the SDK path, copy this file to local.properties
+# and update the path below
+
+# sdk.dir=/path/to/android/sdk
