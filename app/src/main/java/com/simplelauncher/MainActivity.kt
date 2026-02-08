@@ -444,7 +444,7 @@ class MainActivity : AppCompatActivity() {
         // Add shortcuts to the list
         val shortcuts = loadShortcuts()
         apps.addAll(shortcuts)
-        
+
         // Add Launch Settings as a special item
         apps.add(AppInfo(
             label = "Launch Settings",
@@ -453,7 +453,12 @@ class MainActivity : AppCompatActivity() {
             icon = packageManager.defaultActivityIcon,
             isSettings = true
         ))
-        
+
+        // Filter out hidden apps
+        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
+        val hiddenApps = prefs.getStringSet("hidden_list", emptySet()) ?: emptySet()
+        apps.removeAll { appInfo -> hiddenApps.contains(appInfo.packageName) }
+
         // Sort all apps and shortcuts alphabetically
         apps.sortBy { it.label.lowercase() }
         
@@ -541,26 +546,35 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showUninstallDialog(appInfo: AppInfo) {
-        // Don't allow uninstalling the settings or shortcuts
-        if (appInfo.isSettings || appInfo.packageName.startsWith("shortcut_")) {
-            android.widget.Toast.makeText(
-                this,
-                "Cannot uninstall shortcuts or settings",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
+        // Don't show options for Launch Settings
+        if (appInfo.isSettings) {
             return
         }
 
-        // Don't allow uninstalling system launcher (this app)
-        if (appInfo.packageName == packageName) {
-            android.widget.Toast.makeText(
-                this,
-                "Cannot uninstall the launcher",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
-            return
+        val options = mutableListOf<String>()
+        options.add("Hide from list")
+
+        // Only allow uninstalling regular apps (not shortcuts or launcher)
+        val canUninstall = !appInfo.packageName.startsWith("shortcut_") &&
+                          appInfo.packageName != packageName
+
+        if (canUninstall) {
+            options.add("Uninstall")
         }
 
+        AlertDialog.Builder(this)
+            .setTitle(appInfo.label)
+            .setItems(options.toTypedArray()) { dialog, which ->
+                when (options[which]) {
+                    "Hide from list" -> hideApp(appInfo)
+                    "Uninstall" -> confirmUninstall(appInfo)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun confirmUninstall(appInfo: AppInfo) {
         AlertDialog.Builder(this)
             .setTitle("Uninstall App")
             .setMessage("Do you want to uninstall \"${appInfo.label}\"?")
@@ -569,6 +583,27 @@ class MainActivity : AppCompatActivity() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    private fun hideApp(appInfo: AppInfo) {
+        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
+        val hiddenApps = prefs.getStringSet("hidden_list", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+
+        hiddenApps.add(appInfo.packageName)
+
+        prefs.edit().apply {
+            putStringSet("hidden_list", hiddenApps)
+            apply()
+        }
+
+        android.widget.Toast.makeText(
+            this,
+            "\"${appInfo.label}\" hidden from list",
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+
+        // Reload apps to apply the change
+        loadApps()
     }
 
     private fun uninstallApp(appInfo: AppInfo) {

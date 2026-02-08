@@ -25,6 +25,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var selectWallpaperButton: Button
     private lateinit var clearWallpaperButton: Button
     private lateinit var manageWidgetsButton: Button
+    private lateinit var manageHiddenAppsButton: Button
     private lateinit var widgetEditModeSwitch: androidx.appcompat.widget.SwitchCompat
     
     // Activity result launcher for image picker
@@ -56,6 +57,7 @@ class SettingsActivity : AppCompatActivity() {
         selectWallpaperButton = findViewById(R.id.selectWallpaperButton)
         clearWallpaperButton = findViewById(R.id.clearWallpaperButton)
         manageWidgetsButton = findViewById(R.id.manageWidgetsButton)
+        manageHiddenAppsButton = findViewById(R.id.manageHiddenAppsButton)
         widgetEditModeSwitch = findViewById(R.id.widgetEditModeSwitch)
         
         shortcutsRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -78,7 +80,12 @@ class SettingsActivity : AppCompatActivity() {
         manageWidgetsButton.setOnClickListener {
             openWidgetManagement()
         }
-        
+
+        // Setup manage hidden apps button
+        manageHiddenAppsButton.setOnClickListener {
+            showHiddenApps()
+        }
+
         // Setup widget edit mode switch
         widgetEditModeSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().apply {
@@ -224,6 +231,72 @@ class SettingsActivity : AppCompatActivity() {
     private fun openWidgetManagement() {
         val intent = Intent(this, WidgetManagementActivity::class.java)
         startActivity(intent)
+    }
+
+    private fun showHiddenApps() {
+        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
+        val hiddenPackages = prefs.getStringSet("hidden_list", emptySet())?.toList() ?: emptyList()
+
+        if (hiddenPackages.isEmpty()) {
+            Toast.makeText(this, "No hidden apps", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Get app labels for the hidden packages
+        val packageManager = packageManager
+        val hiddenApps = hiddenPackages.mapNotNull { packageName ->
+            try {
+                val appInfo = packageManager.getApplicationInfo(packageName, 0)
+                val label = packageManager.getApplicationLabel(appInfo).toString()
+                Pair(packageName, label)
+            } catch (e: Exception) {
+                // App is no longer installed, should be cleaned up
+                null
+            }
+        }.sortedBy { it.second }
+
+        if (hiddenApps.isEmpty()) {
+            // Clean up invalid entries
+            prefs.edit().putStringSet("hidden_list", emptySet()).apply()
+            Toast.makeText(this, "No hidden apps", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val appLabels = hiddenApps.map { it.second }.toTypedArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Hidden Apps")
+            .setItems(appLabels) { _, which ->
+                val selectedApp = hiddenApps[which]
+                showUnhideConfirmation(selectedApp.first, selectedApp.second)
+            }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+
+    private fun showUnhideConfirmation(packageName: String, appLabel: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Unhide App")
+            .setMessage("Do you want to show \"$appLabel\" in the app list again?")
+            .setPositiveButton("Unhide") { _, _ ->
+                unhideApp(packageName, appLabel)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun unhideApp(packageName: String, appLabel: String) {
+        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
+        val hiddenApps = prefs.getStringSet("hidden_list", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+
+        hiddenApps.remove(packageName)
+
+        prefs.edit().apply {
+            putStringSet("hidden_list", hiddenApps)
+            apply()
+        }
+
+        Toast.makeText(this, "\"$appLabel\" unhidden", Toast.LENGTH_SHORT).show()
     }
 }
 

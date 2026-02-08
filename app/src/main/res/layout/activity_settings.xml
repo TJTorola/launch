@@ -53,7 +53,19 @@
         android:text="Manage Widgets"
         android:textColor="#FFFFFF"
         android:backgroundTint="#444444" />
-    
+
+    <!-- Hidden Apps Management Button -->
+    <Button
+        android:id="@+id/manageHiddenAppsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Manage Hidden Apps"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#444444" />
+
     <!-- Widget Edit Mode Toggle -->
     <LinearLayout
         android:layout_width="match_parent"
