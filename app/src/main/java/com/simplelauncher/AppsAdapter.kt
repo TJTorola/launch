@@ -8,7 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 
 class AppsAdapter(
     private val allApps: List<AppInfo>,
-    private val onAppClick: (AppInfo) -> Unit
+    private val onAppClick: (AppInfo) -> Unit,
+    private val onAppLongPress: (AppInfo) -> Unit
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
     private var filteredApps: List<AppInfo> = allApps
@@ -20,6 +21,10 @@ class AppsAdapter(
             appLabel.text = appInfo.label
             itemView.setOnClickListener {
                 onAppClick(appInfo)
+            }
+            itemView.setOnLongClickListener {
+                onAppLongPress(appInfo)
+                true
             }
         }
     }

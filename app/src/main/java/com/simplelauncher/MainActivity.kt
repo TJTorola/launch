@@ -98,6 +98,8 @@ class MainActivity : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
+        // Reload apps when returning to launcher (e.g., after uninstalling an app)
+        loadApps()
         // Reload wallpaper when returning to launcher (e.g., after changing it in settings)
         loadWallpaper()
         // Reload widgets in case they were added/removed
@@ -455,9 +457,15 @@ class MainActivity : AppCompatActivity() {
         // Sort all apps and shortcuts alphabetically
         apps.sortBy { it.label.lowercase() }
         
-        appsAdapter = AppsAdapter(apps) { appInfo ->
-            launchApp(appInfo)
-        }
+        appsAdapter = AppsAdapter(
+            apps,
+            onAppClick = { appInfo ->
+                launchApp(appInfo)
+            },
+            onAppLongPress = { appInfo ->
+                showUninstallDialog(appInfo)
+            }
+        )
         appsRecyclerView.adapter = appsAdapter
     }
     
@@ -528,6 +536,55 @@ class MainActivity : AppCompatActivity() {
             hideAppDrawer()
         } catch (e: Exception) {
             // Handle launch errors silently
+            e.printStackTrace()
+        }
+    }
+
+    private fun showUninstallDialog(appInfo: AppInfo) {
+        // Don't allow uninstalling the settings or shortcuts
+        if (appInfo.isSettings || appInfo.packageName.startsWith("shortcut_")) {
+            android.widget.Toast.makeText(
+                this,
+                "Cannot uninstall shortcuts or settings",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        // Don't allow uninstalling system launcher (this app)
+        if (appInfo.packageName == packageName) {
+            android.widget.Toast.makeText(
+                this,
+                "Cannot uninstall the launcher",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Uninstall App")
+            .setMessage("Do you want to uninstall \"${appInfo.label}\"?")
+            .setPositiveButton("Uninstall") { _, _ ->
+                uninstallApp(appInfo)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun uninstallApp(appInfo: AppInfo) {
+        try {
+            val uri = Uri.fromParts("package", appInfo.packageName, null)
+            val intent = Intent(Intent.ACTION_DELETE, uri)
+            startActivity(intent)
+
+            // Hide app drawer after starting the intent
+            hideAppDrawer()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(
+                this,
+                "Failed to uninstall app: ${e.message}",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
             e.printStackTrace()
         }
     }
