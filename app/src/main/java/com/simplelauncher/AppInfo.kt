@@ -6,5 +6,6 @@ data class AppInfo(
     val label: String,
     val packageName: String,
     val className: String,
-    val icon: Drawable
+    val icon: Drawable,
+    val isSettings: Boolean = false
 )

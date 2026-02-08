@@ -172,6 +172,15 @@ class MainActivity : AppCompatActivity() {
         val shortcuts = loadShortcuts()
         apps.addAll(shortcuts)
         
+        // Add Launch Settings as a special item
+        apps.add(AppInfo(
+            label = "Launch Settings",
+            packageName = "com.simplelauncher.SETTINGS",
+            className = "",
+            icon = packageManager.defaultActivityIcon,
+            isSettings = true
+        ))
+        
         // Sort all apps and shortcuts alphabetically
         apps.sortBy { it.label.lowercase() }
         
@@ -207,6 +216,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun launchApp(appInfo: AppInfo) {
         try {
+            // Check if this is the settings item
+            if (appInfo.isSettings) {
+                val intent = Intent(this, SettingsActivity::class.java)
+                startActivity(intent)
+                hideAppDrawer()
+                return
+            }
+            
             // Check if this is a shortcut (packageName starts with "shortcut_")
             if (appInfo.packageName.startsWith("shortcut_")) {
                 val prefs = getSharedPreferences("shortcuts", Context.MODE_PRIVATE)

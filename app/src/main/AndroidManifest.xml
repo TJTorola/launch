@@ -34,6 +34,12 @@
             
         </activity>
         
+        <!-- Settings activity for managing shortcuts -->
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.SimpleLauncher" />
+        
         <!-- Activity for handling pinned shortcut requests (Android 8.0+) -->
         <activity
             android:name=".PinShortcutActivity"
