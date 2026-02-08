@@ -195,16 +195,33 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ## Testing on Device
 
-The app requires being set as the default launcher:
+The app requires being set as the default launcher.
 
-**Method 1**: Press Home button → Select "Launch" → Choose "Always" or "Just once"
+**Important:** Launcher apps don't appear in your regular app drawer. They only appear when selecting a default launcher.
 
-**Method 2**: Settings → Apps → Default apps → Home app → Select "Launch"
+### Method 1: Using the Home Button
+1. Press the **Home** button on your Android device
+2. You'll be prompted to choose a launcher
+3. Select "Launch" and tap "Always" or "Just once"
 
-**For testing without setting as default**:
+### Method 2: Via Settings
+1. Open your device's **Settings**
+2. Go to **Apps** or **Applications**
+3. Tap the three dots menu or find **Default apps**
+4. Select **Home app** or **Launcher**
+5. Choose "Launch" from the list
+
+### Method 3: Launch Manually (for testing)
+To test the app without setting it as default:
 ```bash
 adb shell am start -n dev.torola.launch/.MainActivity
 ```
+
+### Reverting to Your Previous Launcher
+If you want to go back to your original launcher:
+1. Press the Home button
+2. Select your previous launcher
+3. Or go to Settings → Apps → Default apps → Home app
 
 ## Common Issues
 
