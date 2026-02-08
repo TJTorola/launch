@@ -536,78 +536,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showUninstallDialog(appInfo: AppInfo) {
-        val options = mutableListOf<String>()
-        options.add("Hide from list")
-
-        // Only allow uninstalling regular apps (not shortcuts or launcher)
-        val canUninstall = !appInfo.packageName.startsWith("shortcut_") &&
-                          appInfo.packageName != packageName
-
-        if (canUninstall) {
-            options.add("Uninstall")
+        val intent = Intent(this, AppOptionsActivity::class.java).apply {
+            putExtra(AppOptionsActivity.EXTRA_PACKAGE_NAME, appInfo.packageName)
+            putExtra(AppOptionsActivity.EXTRA_CLASS_NAME, appInfo.className)
+            putExtra(AppOptionsActivity.EXTRA_APP_LABEL, appInfo.label)
+            putExtra(AppOptionsActivity.EXTRA_IS_SHORTCUT, appInfo.packageName.startsWith("shortcut_"))
         }
-
-        AlertDialog.Builder(this)
-            .setTitle(appInfo.label)
-            .setItems(options.toTypedArray()) { dialog, which ->
-                when (options[which]) {
-                    "Hide from list" -> hideApp(appInfo)
-                    "Uninstall" -> confirmUninstall(appInfo)
-                }
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        startActivity(intent)
     }
 
-    private fun confirmUninstall(appInfo: AppInfo) {
-        AlertDialog.Builder(this)
-            .setTitle("Uninstall App")
-            .setMessage("Do you want to uninstall \"${appInfo.label}\"?")
-            .setPositiveButton("Uninstall") { _, _ ->
-                uninstallApp(appInfo)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
 
-    private fun hideApp(appInfo: AppInfo) {
-        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
-        val hiddenApps = prefs.getStringSet("hidden_list", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
-
-        hiddenApps.add(appInfo.packageName)
-
-        prefs.edit().apply {
-            putStringSet("hidden_list", hiddenApps)
-            apply()
-        }
-
-        android.widget.Toast.makeText(
-            this,
-            "\"${appInfo.label}\" hidden from list",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
-
-        // Reload apps to apply the change
-        loadApps()
-    }
-
-    private fun uninstallApp(appInfo: AppInfo) {
-        try {
-            val uri = Uri.fromParts("package", appInfo.packageName, null)
-            val intent = Intent(Intent.ACTION_DELETE, uri)
-            startActivity(intent)
-
-            // Hide app drawer after starting the intent
-            hideAppDrawer()
-        } catch (e: Exception) {
-            android.widget.Toast.makeText(
-                this,
-                "Failed to uninstall app: ${e.message}",
-                android.widget.Toast.LENGTH_LONG
-            ).show()
-            e.printStackTrace()
-        }
-    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return if (gestureDetector.onTouchEvent(event)) {
