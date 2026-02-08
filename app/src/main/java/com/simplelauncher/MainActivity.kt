@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var widgetHost: LauncherAppWidgetHost
     private lateinit var widgetManagerHelper: WidgetManagerHelper
     private var isAppDrawerVisible = false
+    private var isWidgetEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,6 +92,8 @@ class MainActivity : AppCompatActivity() {
         loadWallpaper()
         // Reload widgets in case they were added/removed
         loadWidgets()
+        // Update widget edit mode based on settings
+        updateWidgetEditMode()
     }
     
     override fun onStart() {
@@ -167,27 +170,35 @@ class MainActivity : AppCompatActivity() {
                     widgetInfo
                 )
                 
-                // Set widget size based on provider info
-                val widthDp = widgetInfo.minWidth
-                val heightDp = widgetInfo.minHeight
+                // Get stored position and size, or use defaults
+                val storedX = prefs.getInt("${widgetId}_x", -1)
+                val storedY = prefs.getInt("${widgetId}_y", -1)
+                val storedWidth = prefs.getInt("${widgetId}_width", -1)
+                val storedHeight = prefs.getInt("${widgetId}_height", -1)
                 
-                // Convert dp to pixels
+                // Calculate default size if not stored
                 val density = resources.displayMetrics.density
-                val widthPx = (widthDp * density).toInt()
-                val heightPx = (heightDp * density).toInt()
+                val defaultWidth = if (storedWidth > 0) storedWidth else (widgetInfo.minWidth * density).toInt()
+                val defaultHeight = if (storedHeight > 0) storedHeight else (widgetInfo.minHeight * density).toInt()
+                
+                // Calculate default position if not stored (vertically stacked)
+                val defaultX = if (storedX >= 0) storedX else 16
+                val defaultY = if (storedY >= 0) storedY else (widgetContainer.childCount * (defaultHeight + 16))
+                
+                // Wrap widget in resizable container
+                val resizableWidget = ResizableWidgetView(this, widgetId) { id, x, y, width, height ->
+                    saveWidgetPosition(id, x, y, width, height)
+                }
+                resizableWidget.setWidgetView(widgetView)
                 
                 // Create layout params
-                val layoutParams = FrameLayout.LayoutParams(widthPx, heightPx)
-                
-                // Position widgets vertically stacked for now (simple layout)
-                // In a full implementation, you'd want grid positioning
-                layoutParams.topMargin = widgetContainer.childCount * (heightPx + 16)
-                layoutParams.leftMargin = 16
-                
-                widgetView.layoutParams = layoutParams
+                val layoutParams = FrameLayout.LayoutParams(defaultWidth, defaultHeight)
+                resizableWidget.layoutParams = layoutParams
+                resizableWidget.x = defaultX.toFloat()
+                resizableWidget.y = defaultY.toFloat()
                 
                 // Add to container
-                widgetContainer.addView(widgetView)
+                widgetContainer.addView(resizableWidget)
             } catch (e: Exception) {
                 // Widget failed to load - log and mark for cleanup
                 android.util.Log.e("MainActivity", "Failed to load widget $widgetId: ${widgetInfo.provider}", e)
@@ -203,6 +214,17 @@ class MainActivity : AppCompatActivity() {
                 putStringSet("widget_list", updatedWidgets)
                 apply()
             }
+        }
+    }
+    
+    private fun saveWidgetPosition(widgetId: Int, x: Int, y: Int, width: Int, height: Int) {
+        val prefs = getSharedPreferences("widgets", Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            putInt("${widgetId}_x", x)
+            putInt("${widgetId}_y", y)
+            putInt("${widgetId}_width", width)
+            putInt("${widgetId}_height", height)
+            apply()
         }
     }
     
@@ -505,6 +527,19 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             return false
+        }
+    }
+    
+    private fun updateWidgetEditMode() {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        isWidgetEditMode = prefs.getBoolean("widget_edit_mode", false)
+        
+        // Update all ResizableWidgetViews
+        for (i in 0 until widgetContainer.childCount) {
+            val child = widgetContainer.getChildAt(i)
+            if (child is ResizableWidgetView) {
+                child.setEditMode(isWidgetEditMode)
+            }
         }
     }
 }

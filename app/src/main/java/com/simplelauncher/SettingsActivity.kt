@@ -25,6 +25,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var selectWallpaperButton: Button
     private lateinit var clearWallpaperButton: Button
     private lateinit var manageWidgetsButton: Button
+    private lateinit var widgetEditModeSwitch: androidx.appcompat.widget.SwitchCompat
     
     // Activity result launcher for image picker
     private val imagePickerLauncher = registerForActivityResult(
@@ -55,8 +56,13 @@ class SettingsActivity : AppCompatActivity() {
         selectWallpaperButton = findViewById(R.id.selectWallpaperButton)
         clearWallpaperButton = findViewById(R.id.clearWallpaperButton)
         manageWidgetsButton = findViewById(R.id.manageWidgetsButton)
+        widgetEditModeSwitch = findViewById(R.id.widgetEditModeSwitch)
         
         shortcutsRecyclerView.layoutManager = LinearLayoutManager(this)
+        
+        // Load widget edit mode state
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        widgetEditModeSwitch.isChecked = prefs.getBoolean("widget_edit_mode", false)
         
         // Setup wallpaper selection button
         selectWallpaperButton.setOnClickListener {
@@ -71,6 +77,21 @@ class SettingsActivity : AppCompatActivity() {
         // Setup manage widgets button
         manageWidgetsButton.setOnClickListener {
             openWidgetManagement()
+        }
+        
+        // Setup widget edit mode switch
+        widgetEditModeSwitch.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().apply {
+                putBoolean("widget_edit_mode", isChecked)
+                apply()
+            }
+            
+            val message = if (isChecked) {
+                "Widget edit mode enabled. Long-press widgets to move/resize."
+            } else {
+                "Widget edit mode disabled"
+            }
+            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
         }
         
         // Handle back button press
