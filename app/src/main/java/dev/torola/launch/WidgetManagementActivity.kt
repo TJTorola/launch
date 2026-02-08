@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -106,6 +107,7 @@ class WidgetManagementActivity : AppCompatActivity() {
         widgetManagerHelper = WidgetManagerHelper(this)
         
         widgetsRecyclerView = findViewById(R.id.widgetsRecyclerView)
+        findViewById<ImageView>(R.id.backIcon).setOnClickListener { finish() }
         emptyStateText = findViewById(R.id.emptyStateText)
         addWidgetButton = findViewById(R.id.addWidgetButton)
         

@@ -65,6 +65,7 @@ class AppOptionsActivity : AppCompatActivity() {
         hideSwitch = findViewById(R.id.hideSwitch)
         hideStatus = findViewById(R.id.hideStatus)
         settingsButton = findViewById(R.id.settingsButton)
+        findViewById<ImageView>(R.id.backIcon).setOnClickListener { finish() }
         settingsStatus = findViewById(R.id.settingsStatus)
     }
 

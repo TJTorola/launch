@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -19,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 
 class SettingsActivity : AppCompatActivity() {
 
+    private lateinit var backIcon: ImageView
     private lateinit var selectWallpaperButton: Button
     private lateinit var clearWallpaperButton: Button
     private lateinit var manageWidgetsButton: Button
@@ -51,6 +53,8 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
         
         selectWallpaperButton = findViewById(R.id.selectWallpaperButton)
+        backIcon = findViewById(R.id.backIcon)
+        backIcon.setOnClickListener { finish() }
         clearWallpaperButton = findViewById(R.id.clearWallpaperButton)
         manageWidgetsButton = findViewById(R.id.manageWidgetsButton)
         manageShortcutsButton = findViewById(R.id.manageShortcutsButton)

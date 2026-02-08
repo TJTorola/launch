@@ -3,6 +3,7 @@ package dev.torola.launch
 import android.content.Context
 import android.os.Bundle
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
@@ -21,6 +22,7 @@ class ShortcutManagementActivity : AppCompatActivity() {
         setContentView(R.layout.activity_shortcut_management)
 
         shortcutsRecyclerView = findViewById(R.id.shortcutsRecyclerView)
+        findViewById<ImageView>(R.id.backIcon).setOnClickListener { finish() }
         emptyStateText = findViewById(R.id.emptyStateText)
 
         shortcutsRecyclerView.layoutManager = LinearLayoutManager(this)
