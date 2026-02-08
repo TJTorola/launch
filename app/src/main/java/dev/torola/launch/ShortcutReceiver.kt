@@ -1,4 +1,4 @@
-package com.simplelauncher
+package dev.torola.launch
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -40,7 +40,7 @@ class ShortcutReceiver : BroadcastReceiver() {
         
         // Notify MainActivity to reload apps
         val reloadIntent = Intent(context, MainActivity::class.java).apply {
-            action = "com.simplelauncher.RELOAD_APPS"
+            action = "dev.torola.launch.RELOAD_APPS"
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         context.startActivity(reloadIntent)

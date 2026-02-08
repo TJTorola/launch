@@ -1,4 +1,4 @@
-package com.simplelauncher
+package dev.torola.launch
 
 import android.graphics.drawable.Drawable
 

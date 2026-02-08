@@ -1,4 +1,4 @@
-package com.simplelauncher
+package dev.torola.launch
 
 import android.app.PendingIntent
 import android.content.Context
@@ -334,7 +334,7 @@ class MainActivity : AppCompatActivity() {
     
     private fun handleShortcutIntent(intent: Intent?) {
         when (intent?.action) {
-            "com.simplelauncher.ADD_SHORTCUT" -> {
+            "dev.torola.launch.ADD_SHORTCUT" -> {
                 val shortcutIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     intent.getParcelableExtra("shortcut_intent", Intent::class.java)
                 } else {
@@ -342,12 +342,12 @@ class MainActivity : AppCompatActivity() {
                     intent.getParcelableExtra("shortcut_intent")
                 }
                 val shortcutName = intent.getStringExtra("shortcut_name")
-                
+
                 if (shortcutIntent != null && shortcutName != null) {
                     showShortcutConfirmationDialog(shortcutName, shortcutIntent)
                 }
             }
-            "com.simplelauncher.RELOAD_APPS" -> {
+            "dev.torola.launch.RELOAD_APPS" -> {
                 // Reload apps when a shortcut was added
                 loadApps()
             }
@@ -448,7 +448,7 @@ class MainActivity : AppCompatActivity() {
         // Add Launch Settings as a special item
         apps.add(AppInfo(
             label = "Launch Settings",
-            packageName = "com.simplelauncher.SETTINGS",
+            packageName = "dev.torola.launch.SETTINGS",
             className = "",
             icon = packageManager.defaultActivityIcon,
             isSettings = true

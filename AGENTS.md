@@ -22,7 +22,7 @@ Launch is a simple Android launcher that displays a blank black home screen. Use
 
 ```
 app/src/main/
-├── java/com/simplelauncher/
+├── java/dev/torola/launch/
 │   ├── MainActivity.kt          # Main launcher activity with gesture handling and app loading
 │   ├── AppInfo.kt               # Data class for app information
 │   ├── AppsAdapter.kt           # RecyclerView adapter with filtering capability
@@ -203,7 +203,7 @@ The app requires being set as the default launcher:
 
 **For testing without setting as default**:
 ```bash
-adb shell am start -n com.simplelauncher/.MainActivity
+adb shell am start -n dev.torola.launch/.MainActivity
 ```
 
 ## Common Issues

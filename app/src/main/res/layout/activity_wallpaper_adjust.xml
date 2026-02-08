@@ -5,7 +5,7 @@
     android:background="#000000">
 
     <!-- Zoomable image view for wallpaper adjustment -->
-    <com.simplelauncher.ZoomableImageView
+    <dev.torola.launch.ZoomableImageView
         android:id="@+id/wallpaperPreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

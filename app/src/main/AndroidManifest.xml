@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.simplelauncher">
+    package="dev.torola.launch">
 
     <!-- Required to query and list all installed apps on Android 11+ -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
@@ -22,7 +22,7 @@
         android:allowBackup="true"
         android:label="Launch"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SimpleLauncher">
+        android:theme="@style/Theme.Launch">
         
         <activity
             android:name=".MainActivity"
@@ -30,7 +30,7 @@
             android:launchMode="singleTask"
             android:stateNotNeeded="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher">
+            android:theme="@style/Theme.Launch">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -50,42 +50,42 @@
             android:name=".SettingsActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher" />
+            android:theme="@style/Theme.Launch" />
         
         <!-- Wallpaper adjustment activity -->
         <activity
             android:name=".WallpaperAdjustActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher" />
+            android:theme="@style/Theme.Launch" />
         
         <!-- Widget management activity -->
         <activity
             android:name=".WidgetManagementActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher" />
+            android:theme="@style/Theme.Launch" />
         
         <!-- Widget picker activity -->
         <activity
             android:name=".WidgetPickerActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher" />
+            android:theme="@style/Theme.Launch" />
 
         <!-- Shortcut management activity -->
         <activity
             android:name=".ShortcutManagementActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher" />
+            android:theme="@style/Theme.Launch" />
 
         <!-- Hidden apps management activity -->
         <activity
             android:name=".HiddenAppsActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher" />
+            android:theme="@style/Theme.Launch" />
 
         <!-- Activity for handling pinned shortcut requests (Android 8.0+) -->
         <activity
@@ -94,7 +94,7 @@
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.SimpleLauncher">
+            android:theme="@style/Theme.Launch">
             <intent-filter>
                 <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
             </intent-filter>

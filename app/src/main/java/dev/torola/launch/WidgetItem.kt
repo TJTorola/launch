@@ -1,4 +1,4 @@
-package com.simplelauncher
+package dev.torola.launch
 
 import android.appwidget.AppWidgetProviderInfo
 import android.graphics.drawable.Drawable

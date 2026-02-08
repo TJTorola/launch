@@ -1,4 +1,4 @@
-package com.simplelauncher
+package dev.torola.launch
 
 import android.content.Context
 import android.content.pm.LauncherApps
@@ -94,7 +94,7 @@ class PinShortcutActivity : AppCompatActivity() {
         
         // Notify MainActivity to reload
         val reloadIntent = android.content.Intent(this, MainActivity::class.java).apply {
-            action = "com.simplelauncher.RELOAD_APPS"
+            action = "dev.torola.launch.RELOAD_APPS"
             flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         startActivity(reloadIntent)

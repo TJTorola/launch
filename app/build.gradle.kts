@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.simplelauncher"
+    namespace = "dev.torola.launch"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.simplelauncher"
+        applicationId = "dev.torola.launch"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

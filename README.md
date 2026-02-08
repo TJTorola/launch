@@ -61,7 +61,7 @@ app/build/outputs/apk/debug/app-debug.apk
 
 ```
 app/src/main/
-├── java/com/simplelauncher/
+├── java/dev/torola/launch/
 │   ├── MainActivity.kt      # Main activity with gesture handling
 │   ├── AppInfo.kt           # Data class for app information
 │   └── AppsAdapter.kt       # RecyclerView adapter for app list
@@ -101,7 +101,7 @@ app/src/main/
 ### Method 3: Launch Manually (for testing)
 To test the app without setting it as default:
 ```bash
-adb shell am start -n com.simplelauncher/.MainActivity
+adb shell am start -n dev.torola.launch/.MainActivity
 ```
 
 ### Reverting to Your Previous Launcher
