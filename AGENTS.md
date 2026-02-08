@@ -130,6 +130,14 @@ The launcher supports adding shortcuts from external apps (like Hermit for PWAs)
 - Use meaningful names that describe purpose
 - Add comments for non-obvious logic (e.g., shortcut handling)
 
+## Automatic Installation
+
+After completing any code change task, automatically install the debug build to a connected device:
+
+1. Check for connected devices using `adb devices`
+2. If at least one device is listed (with a device serial and "device" status), run `./gradlew-fhs installDebug`
+3. If no devices are detected, skip the installation step
+
 ## Important Implementation Details
 
 ### App Loading (MainActivity.kt:133-181)
