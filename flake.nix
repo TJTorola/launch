@@ -29,7 +29,6 @@
           emulator
         ]);
 
-        # Create an FHS environment for running Android build tools
         fhsEnv = pkgs.buildFHSEnv {
           name = "android-env";
           targetPkgs = pkgs: (with pkgs; [
@@ -51,19 +50,18 @@
             export ANDROID_SDK_ROOT="$ANDROID_HOME"
             export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
             export JAVA_HOME="${pkgs.jdk17}"
-            
-            # Create local.properties if it doesn't exist
+
             if [ ! -f local.properties ]; then
               echo "sdk.dir=$ANDROID_HOME" > local.properties
               echo "Created local.properties with Android SDK path"
             fi
-            
+
             echo "Android development environment loaded (FHS)"
             echo "Android SDK: $ANDROID_HOME"
             echo "Java: $(java -version 2>&1 | head -n 1)"
             echo ""
-            echo "To build the app: ./gradlew assembleDebug"
-            echo "To install to device: ./gradlew installDebug"
+            echo "To build the app: ./gradlew-fhs assembleDebug"
+            echo "To install to device: ./gradlew-fhs installDebug"
             echo "To list devices: adb devices"
           '';
         };
@@ -82,23 +80,19 @@
             export ANDROID_HOME="${android-sdk}/share/android-sdk"
             export ANDROID_SDK_ROOT="$ANDROID_HOME"
             export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
-            
-            # Create local.properties if it doesn't exist
+
             if [ ! -f local.properties ]; then
               echo "sdk.dir=$ANDROID_HOME" > local.properties
               echo "Created local.properties with Android SDK path"
             fi
-            
-            # Create FHS wrapper script for gradle
+
             cat > gradlew-fhs << 'WRAPPER'
 #!/usr/bin/env bash
-# Kill any existing Gradle daemons first
 ./gradlew --stop 2>/dev/null || true
-# Run gradle inside FHS environment
 ${fhsEnv}/bin/android-env ./gradlew "$@"
 WRAPPER
             chmod +x gradlew-fhs
-            
+
             echo "Android development environment loaded"
             echo "Android SDK: $ANDROID_HOME"
             echo "Java: $(java -version 2>&1 | head -n 1)"
@@ -110,8 +104,7 @@ WRAPPER
             echo "To list devices: adb devices"
           '';
         };
-        
-        # Also provide the FHS environment as a package
+
         packages.android-fhs = fhsEnv;
       }
     );

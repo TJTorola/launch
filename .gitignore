@@ -53,6 +53,7 @@ vcs.xml
 # Nix
 result
 result-*
+gradlew-fhs
 
 # OS-specific files
 .DS_Store
