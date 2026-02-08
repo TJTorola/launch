@@ -253,28 +253,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showAppDrawer() {
+        if (isAppDrawerVisible) return
+        
         appDrawerLayout.visibility = View.VISIBLE
         isAppDrawerVisible = true
         
-        // Clear search and reset filter
-        searchInput.setText("")
+        // Start off-screen at the bottom
+        appDrawerLayout.translationY = appDrawerLayout.height.toFloat()
         
-        // Show keyboard
-        searchInput.requestFocus()
-        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(searchInput, InputMethodManager.SHOW_IMPLICIT)
+        // Animate sliding up
+        appDrawerLayout.animate()
+            .translationY(0f)
+            .setDuration(100)
+            .withEndAction {
+                // Clear search and reset filter after animation
+                searchInput.setText("")
+                
+                // Show keyboard
+                searchInput.requestFocus()
+                val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(searchInput, InputMethodManager.SHOW_IMPLICIT)
+            }
+            .start()
     }
 
     private fun hideAppDrawer() {
-        appDrawerLayout.visibility = View.GONE
-        isAppDrawerVisible = false
+        if (!isAppDrawerVisible) return
         
-        // Hide keyboard
+        // Hide keyboard immediately
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(searchInput.windowToken, 0)
         
-        // Clear search
-        searchInput.setText("")
+        // Animate sliding down
+        appDrawerLayout.animate()
+            .translationY(appDrawerLayout.height.toFloat())
+            .setDuration(100)
+            .withEndAction {
+                appDrawerLayout.visibility = View.GONE
+                isAppDrawerVisible = false
+                
+                // Clear search
+                searchInput.setText("")
+            }
+            .start()
     }
 
     override fun onBackPressed() {
