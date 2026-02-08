@@ -24,7 +24,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var manageWidgetsButton: Button
     private lateinit var manageShortcutsButton: Button
     private lateinit var manageHiddenAppsButton: Button
-    private lateinit var widgetEditModeSwitch: androidx.appcompat.widget.SwitchCompat
+    private lateinit var widgetEditModeSwitch: com.google.android.material.materialswitch.MaterialSwitch
     
     // Activity result launcher for image picker
     private val imagePickerLauncher = registerForActivityResult(
