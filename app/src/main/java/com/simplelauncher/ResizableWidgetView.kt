@@ -11,11 +11,13 @@ import kotlin.math.abs
 
 /**
  * Container view that wraps an AppWidgetHostView and adds drag/resize functionality
+ * with grid snapping for discrete positioning
  */
 class ResizableWidgetView(
     context: Context,
     private val widgetId: Int,
-    private val onPositionChanged: (Int, Int, Int, Int, Int) -> Unit // widgetId, x, y, width, height
+    private val onPositionChanged: (Int, Int, Int, Int, Int) -> Unit, // widgetId, x, y, width, height
+    private val checkCollision: (Int, Int, Int, Int, Int) -> Boolean // widgetId, x, y, width, height -> overlaps
 ) : FrameLayout(context) {
 
     private val widgetView: AppWidgetHostView
@@ -35,6 +37,37 @@ class ResizableWidgetView(
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var isEditMode = false
+    private var originalX = 0f
+    private var originalY = 0f
+    private var originalWidth = 0
+    private var originalHeight = 0
+    
+    companion object {
+        // Grid cell size in pixels (approximately 70dp which is standard Android widget cell size)
+        const val GRID_CELL_SIZE = 200 // pixels
+        
+        /**
+         * Snap a value to the nearest grid cell (rounds to nearest, not down)
+         */
+        fun snapToGrid(value: Int): Int {
+            val cells = (value + GRID_CELL_SIZE / 2) / GRID_CELL_SIZE
+            return cells * GRID_CELL_SIZE
+        }
+        
+        /**
+         * Convert grid cells to pixels
+         */
+        fun cellsToPixels(cells: Int): Int {
+            return cells * GRID_CELL_SIZE
+        }
+        
+        /**
+         * Convert pixels to grid cells (rounded to nearest)
+         */
+        fun pixelsToCells(pixels: Int): Int {
+            return (pixels + GRID_CELL_SIZE / 2) / GRID_CELL_SIZE
+        }
+    }
     
     init {
         // Create empty container for widget view (will be set later)
@@ -92,6 +125,12 @@ class ResizableWidgetView(
                 lastTouchX = event.rawX
                 lastTouchY = event.rawY
                 
+                // Save original position and size in case of collision
+                originalX = x
+                originalY = y
+                originalWidth = width
+                originalHeight = height
+                
                 // Check if touch is on resize handle
                 val touchX = event.x
                 val touchY = event.y
@@ -104,19 +143,27 @@ class ResizableWidgetView(
             MotionEvent.ACTION_MOVE -> {
                 val deltaX = event.rawX - lastTouchX
                 val deltaY = event.rawY - lastTouchY
-                
+
                 if (isDragging) {
-                    // Move the widget
-                    val newX = (x + deltaX).toInt().coerceAtLeast(0)
-                    val newY = (y + deltaY).toInt().coerceAtLeast(0)
-                    
+                    // Move the widget (no snapping during drag for smooth movement)
+                    val parent = parent as? android.view.ViewGroup
+                    val maxX = (parent?.width ?: Int.MAX_VALUE) - width
+                    val maxY = (parent?.height ?: Int.MAX_VALUE) - height
+
+                    val newX = (x + deltaX).toInt().coerceIn(0, maxX.coerceAtLeast(0))
+                    val newY = (y + deltaY).toInt().coerceIn(0, maxY.coerceAtLeast(0))
+
                     x = newX.toFloat()
                     y = newY.toFloat()
                 } else if (isResizing) {
-                    // Resize the widget
-                    val newWidth = (width + deltaX.toInt()).coerceAtLeast(100)
-                    val newHeight = (height + deltaY.toInt()).coerceAtLeast(100)
-                    
+                    // Resize the widget (no snapping during resize for smooth resizing)
+                    val parent = parent as? android.view.ViewGroup
+                    val maxWidth = (parent?.width ?: Int.MAX_VALUE) - x.toInt()
+                    val maxHeight = (parent?.height ?: Int.MAX_VALUE) - y.toInt()
+
+                    val newWidth = (width + deltaX.toInt()).coerceIn(GRID_CELL_SIZE, maxWidth.coerceAtLeast(GRID_CELL_SIZE))
+                    val newHeight = (height + deltaY.toInt()).coerceIn(GRID_CELL_SIZE, maxHeight.coerceAtLeast(GRID_CELL_SIZE))
+
                     layoutParams = layoutParams.apply {
                         this.width = newWidth
                         this.height = newHeight
@@ -131,14 +178,64 @@ class ResizableWidgetView(
             
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (isDragging || isResizing) {
-                    // Save position and size
-                    onPositionChanged(
+                    val parent = parent as? android.view.ViewGroup
+                    val parentWidth = parent?.width ?: width
+                    val parentHeight = parent?.height ?: height
+
+                    // Snap to grid on release
+                    val snappedX = snapToGrid(x.toInt()).coerceAtLeast(0)
+                    val snappedY = snapToGrid(y.toInt()).coerceAtLeast(0)
+
+                    // Constrain width/height to not exceed screen bounds
+                    val maxPossibleWidth = parentWidth - snappedX
+                    val maxPossibleHeight = parentHeight - snappedY
+                    val snappedWidth = snapToGrid(width).coerceIn(GRID_CELL_SIZE, maxPossibleWidth.coerceAtLeast(GRID_CELL_SIZE))
+                    val snappedHeight = snapToGrid(height).coerceIn(GRID_CELL_SIZE, maxPossibleHeight.coerceAtLeast(GRID_CELL_SIZE))
+
+                    // Ensure widget doesn't extend beyond screen
+                    val maxX = parentWidth - snappedWidth
+                    val maxY = parentHeight - snappedHeight
+
+                    val finalX = snappedX.coerceIn(0, maxX.coerceAtLeast(0))
+                    val finalY = snappedY.coerceIn(0, maxY.coerceAtLeast(0))
+                    
+                    // Check for collision with other widgets
+                    val wouldCollide = checkCollision(
                         widgetId,
-                        x.toInt(),
-                        y.toInt(),
-                        width,
-                        height
+                        finalX,
+                        finalY,
+                        snappedWidth,
+                        snappedHeight
                     )
+                    
+                    if (wouldCollide) {
+                        // Revert to original position/size
+                        x = originalX
+                        y = originalY
+                        layoutParams = layoutParams.apply {
+                            this.width = originalWidth
+                            this.height = originalHeight
+                        }
+                        requestLayout()
+                    } else {
+                        // Apply snapped values
+                        x = finalX.toFloat()
+                        y = finalY.toFloat()
+                        layoutParams = layoutParams.apply {
+                            this.width = snappedWidth
+                            this.height = snappedHeight
+                        }
+                        requestLayout()
+                        
+                        // Save position and size (convert to grid cells for storage)
+                        onPositionChanged(
+                            widgetId,
+                            pixelsToCells(finalX),
+                            pixelsToCells(finalY),
+                            pixelsToCells(snappedWidth),
+                            pixelsToCells(snappedHeight)
+                        )
+                    }
                 }
                 
                 isDragging = false
@@ -156,4 +253,6 @@ class ResizableWidgetView(
     }
     
     fun isWidgetEditMode(): Boolean = isEditMode
+
+    fun getWidgetId(): Int = widgetId
 }

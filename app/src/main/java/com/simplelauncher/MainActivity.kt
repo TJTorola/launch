@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var widgetContainer: FrameLayout
     private lateinit var widgetHost: LauncherAppWidgetHost
     private lateinit var widgetManagerHelper: WidgetManagerHelper
+    private lateinit var gridOverlay: GridOverlayView
     private var isAppDrawerVisible = false
     private var isWidgetEditMode = false
 
@@ -74,6 +75,15 @@ class MainActivity : AppCompatActivity() {
         // Initialize widget host
         widgetHost = LauncherAppWidgetHost(this, WidgetManagerHelper.APPWIDGET_HOST_ID)
         widgetManagerHelper = WidgetManagerHelper(this)
+        
+        // Create grid overlay first (so it's behind widgets)
+        gridOverlay = GridOverlayView(this)
+        gridOverlay.visibility = View.GONE
+        val gridLayoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        )
+        widgetContainer.addView(gridOverlay, gridLayoutParams)
         
         loadApps()
         setupSearchInput()
@@ -145,8 +155,14 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun loadWidgets() {
-        // Clear existing widgets
-        widgetContainer.removeAllViews()
+        // Clear existing widgets but keep the grid overlay
+        val childCount = widgetContainer.childCount
+        for (i in childCount - 1 downTo 0) {
+            val child = widgetContainer.getChildAt(i)
+            if (child !is GridOverlayView) {
+                widgetContainer.removeView(child)
+            }
+        }
         
         val prefs = getSharedPreferences("widgets", Context.MODE_PRIVATE)
         val widgetIds = prefs.getStringSet("widget_list", emptySet()) ?: emptySet()
@@ -170,32 +186,77 @@ class MainActivity : AppCompatActivity() {
                     widgetInfo
                 )
                 
-                // Get stored position and size, or use defaults
-                val storedX = prefs.getInt("${widgetId}_x", -1)
-                val storedY = prefs.getInt("${widgetId}_y", -1)
-                val storedWidth = prefs.getInt("${widgetId}_width", -1)
-                val storedHeight = prefs.getInt("${widgetId}_height", -1)
+                // Get stored position and size in grid cells, or use defaults
+                val storedCellX = prefs.getInt("${widgetId}_x", -1)
+                val storedCellY = prefs.getInt("${widgetId}_y", -1)
+                val storedCellWidth = prefs.getInt("${widgetId}_width", -1)
+                val storedCellHeight = prefs.getInt("${widgetId}_height", -1)
                 
-                // Calculate default size if not stored
+                // Calculate default size in cells if not stored
                 val density = resources.displayMetrics.density
-                val defaultWidth = if (storedWidth > 0) storedWidth else (widgetInfo.minWidth * density).toInt()
-                val defaultHeight = if (storedHeight > 0) storedHeight else (widgetInfo.minHeight * density).toInt()
+                val minWidthPx = (widgetInfo.minWidth * density).toInt()
+                val minHeightPx = (widgetInfo.minHeight * density).toInt()
                 
-                // Calculate default position if not stored (vertically stacked)
-                val defaultX = if (storedX >= 0) storedX else 16
-                val defaultY = if (storedY >= 0) storedY else (widgetContainer.childCount * (defaultHeight + 16))
+                val defaultCellWidth = if (storedCellWidth > 0) {
+                    storedCellWidth
+                } else {
+                    ResizableWidgetView.pixelsToCells(minWidthPx).coerceAtLeast(1)
+                }
+                val defaultCellHeight = if (storedCellHeight > 0) {
+                    storedCellHeight
+                } else {
+                    ResizableWidgetView.pixelsToCells(minHeightPx).coerceAtLeast(1)
+                }
+                
+                // Calculate default position in cells if not stored (vertically stacked)
+                val defaultCellX = if (storedCellX >= 0) storedCellX else 0
+                val defaultCellY = if (storedCellY >= 0) {
+                    storedCellY
+                } else {
+                    widgetContainer.childCount * (defaultCellHeight + 1)
+                }
+                
+                // Convert grid cells to pixels
+                val widthPx = ResizableWidgetView.cellsToPixels(defaultCellWidth)
+                val heightPx = ResizableWidgetView.cellsToPixels(defaultCellHeight)
+                val xPx = ResizableWidgetView.cellsToPixels(defaultCellX)
+                val yPx = ResizableWidgetView.cellsToPixels(defaultCellY)
+
+                // Constrain widget dimensions to fit within screen bounds
+                // Use container dimensions if available, otherwise use unconstrained values
+                val containerWidth = if (widgetContainer.width > 0) widgetContainer.width else Int.MAX_VALUE
+                val containerHeight = if (widgetContainer.height > 0) widgetContainer.height else Int.MAX_VALUE
+                val maxWidth = containerWidth - xPx
+                val maxHeight = containerHeight - yPx
+                val constrainedWidthPx = if (maxWidth > ResizableWidgetView.GRID_CELL_SIZE) {
+                    widthPx.coerceIn(ResizableWidgetView.GRID_CELL_SIZE, maxWidth)
+                } else {
+                    widthPx
+                }
+                val constrainedHeightPx = if (maxHeight > ResizableWidgetView.GRID_CELL_SIZE) {
+                    heightPx.coerceIn(ResizableWidgetView.GRID_CELL_SIZE, maxHeight)
+                } else {
+                    heightPx
+                }
                 
                 // Wrap widget in resizable container
-                val resizableWidget = ResizableWidgetView(this, widgetId) { id, x, y, width, height ->
-                    saveWidgetPosition(id, x, y, width, height)
-                }
+                val resizableWidget = ResizableWidgetView(
+                    this,
+                    widgetId,
+                    { id, cellX, cellY, cellWidth, cellHeight ->
+                        saveWidgetPosition(id, cellX, cellY, cellWidth, cellHeight)
+                    },
+                    { id, x, y, w, h ->
+                        checkWidgetCollision(id, x, y, w, h)
+                    }
+                )
                 resizableWidget.setWidgetView(widgetView)
-                
-                // Create layout params
-                val layoutParams = FrameLayout.LayoutParams(defaultWidth, defaultHeight)
+
+                // Create layout params with constrained pixel dimensions
+                val layoutParams = FrameLayout.LayoutParams(constrainedWidthPx, constrainedHeightPx)
                 resizableWidget.layoutParams = layoutParams
-                resizableWidget.x = defaultX.toFloat()
-                resizableWidget.y = defaultY.toFloat()
+                resizableWidget.x = xPx.toFloat()
+                resizableWidget.y = yPx.toFloat()
                 
                 // Add to container
                 widgetContainer.addView(resizableWidget)
@@ -217,15 +278,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun saveWidgetPosition(widgetId: Int, x: Int, y: Int, width: Int, height: Int) {
+    private fun saveWidgetPosition(widgetId: Int, cellX: Int, cellY: Int, cellWidth: Int, cellHeight: Int) {
+        // Save widget position and size in grid cells (not pixels)
         val prefs = getSharedPreferences("widgets", Context.MODE_PRIVATE)
         prefs.edit().apply {
-            putInt("${widgetId}_x", x)
-            putInt("${widgetId}_y", y)
-            putInt("${widgetId}_width", width)
-            putInt("${widgetId}_height", height)
+            putInt("${widgetId}_x", cellX)
+            putInt("${widgetId}_y", cellY)
+            putInt("${widgetId}_width", cellWidth)
+            putInt("${widgetId}_height", cellHeight)
             apply()
         }
+    }
+    
+    private fun checkWidgetCollision(movingWidgetId: Int, x: Int, y: Int, width: Int, height: Int): Boolean {
+        // Check if this position/size would collide with any other widget
+        for (i in 0 until widgetContainer.childCount) {
+            val child = widgetContainer.getChildAt(i)
+
+            // Skip if not a ResizableWidgetView or if it's the moving widget itself
+            if (child !is ResizableWidgetView) continue
+
+            // Skip the widget that's being moved
+            if (child.getWidgetId() == movingWidgetId) continue
+            
+            // Check if rectangles overlap
+            val otherLeft = child.x.toInt()
+            val otherTop = child.y.toInt()
+            val otherRight = otherLeft + child.width
+            val otherBottom = otherTop + child.height
+            
+            val thisLeft = x
+            val thisTop = y
+            val thisRight = x + width
+            val thisBottom = y + height
+            
+            // Check for overlap
+            val overlaps = !(thisRight <= otherLeft ||   // This is to the left of other
+                            thisLeft >= otherRight ||    // This is to the right of other
+                            thisBottom <= otherTop ||    // This is above other
+                            thisTop >= otherBottom)      // This is below other
+            
+            if (overlaps) {
+                return true // Collision detected
+            }
+        }
+        return false // No collision
     }
     
     override fun onNewIntent(intent: Intent) {
@@ -533,6 +630,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateWidgetEditMode() {
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
         isWidgetEditMode = prefs.getBoolean("widget_edit_mode", false)
+        
+        // Show/hide grid overlay
+        gridOverlay.visibility = if (isWidgetEditMode) View.VISIBLE else View.GONE
         
         // Update all ResizableWidgetViews
         for (i in 0 until widgetContainer.childCount) {
