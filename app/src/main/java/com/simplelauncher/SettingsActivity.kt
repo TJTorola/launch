@@ -1,9 +1,17 @@
 package com.simplelauncher
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -14,6 +22,19 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var shortcutsRecyclerView: RecyclerView
     private lateinit var emptyStateText: TextView
     private lateinit var shortcutsAdapter: ShortcutsAdapter
+    private lateinit var selectWallpaperButton: Button
+    private lateinit var clearWallpaperButton: Button
+    
+    // Activity result launcher for image picker
+    private val imagePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                saveWallpaperUri(uri)
+            }
+        }
+    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -21,8 +42,20 @@ class SettingsActivity : AppCompatActivity() {
         
         shortcutsRecyclerView = findViewById(R.id.shortcutsRecyclerView)
         emptyStateText = findViewById(R.id.emptyStateText)
+        selectWallpaperButton = findViewById(R.id.selectWallpaperButton)
+        clearWallpaperButton = findViewById(R.id.clearWallpaperButton)
         
         shortcutsRecyclerView.layoutManager = LinearLayoutManager(this)
+        
+        // Setup wallpaper selection button
+        selectWallpaperButton.setOnClickListener {
+            openImagePicker()
+        }
+        
+        // Setup clear wallpaper button
+        clearWallpaperButton.setOnClickListener {
+            removeWallpaper()
+        }
         
         // Handle back button press
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -32,6 +65,65 @@ class SettingsActivity : AppCompatActivity() {
         })
         
         loadShortcuts()
+    }
+    
+    private fun openImagePicker() {
+        // Use ACTION_OPEN_DOCUMENT for proper persistent permission support
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                // Request persistent permission to access the image
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            }
+        }
+        imagePickerLauncher.launch(intent)
+    }
+    
+    private fun saveWallpaperUri(uri: Uri) {
+        try {
+            // Take persistent permission to access the image
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (e: SecurityException) {
+                    // Some URIs don't support persistent permissions
+                    // We'll still try to use them, but they may not persist across reboots
+                    android.util.Log.w("SettingsActivity", "Could not take persistent permission", e)
+                }
+            }
+            
+            // Test that we can actually read the image
+            contentResolver.openInputStream(uri)?.use { stream ->
+                // If we can open it, it's valid
+                stream.close()
+            } ?: throw Exception("Cannot open image")
+            
+            // Save the URI in SharedPreferences
+            val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+            prefs.edit().apply {
+                putString("wallpaper_uri", uri.toString())
+                apply()
+            }
+            
+            Toast.makeText(this, "Wallpaper set successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to set wallpaper: ${e.message}", Toast.LENGTH_LONG).show()
+            android.util.Log.e("SettingsActivity", "Failed to set wallpaper", e)
+        }
+    }
+    
+    private fun removeWallpaper() {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        prefs.edit().apply {
+            remove("wallpaper_uri")
+            apply()
+        }
+        Toast.makeText(this, "Wallpaper cleared", Toast.LENGTH_SHORT).show()
     }
     
     private fun loadShortcuts() {

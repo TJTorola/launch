@@ -8,6 +8,8 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.ResolveInfoFlags
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
@@ -19,12 +21,15 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GestureDetectorCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.InputStream
 import kotlin.math.abs
 
 class MainActivity : AppCompatActivity() {
@@ -34,12 +39,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchInput: EditText
     private lateinit var appsRecyclerView: RecyclerView
     private lateinit var appsAdapter: AppsAdapter
+    private lateinit var wallpaperImageView: ImageView
     private var isAppDrawerVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        wallpaperImageView = findViewById(R.id.wallpaperImageView)
         appDrawerLayout = findViewById(R.id.appDrawerLayout)
         searchInput = findViewById(R.id.searchInput)
         appsRecyclerView = findViewById(R.id.appsRecyclerView)
@@ -47,11 +54,39 @@ class MainActivity : AppCompatActivity() {
         
         loadApps()
         setupSearchInput()
+        loadWallpaper()
         
         gestureDetector = GestureDetectorCompat(this, SwipeGestureListener())
         
         // Handle shortcut installation requests
         handleShortcutIntent(intent)
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        // Reload wallpaper when returning to launcher (e.g., after changing it in settings)
+        loadWallpaper()
+    }
+    
+    private fun loadWallpaper() {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val wallpaperUriString = prefs.getString("wallpaper_uri", null)
+        
+        if (wallpaperUriString != null) {
+            try {
+                val uri = Uri.parse(wallpaperUriString)
+                // Use setImageURI for proper aspect ratio handling
+                wallpaperImageView.setImageURI(uri)
+                wallpaperImageView.visibility = View.VISIBLE
+            } catch (e: Exception) {
+                // If wallpaper can't be loaded, hide the ImageView
+                wallpaperImageView.visibility = View.GONE
+                e.printStackTrace()
+            }
+        } else {
+            // No wallpaper set, hide the ImageView (black background will show)
+            wallpaperImageView.visibility = View.GONE
+        }
     }
     
     override fun onNewIntent(intent: Intent) {

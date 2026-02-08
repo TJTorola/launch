@@ -7,6 +7,10 @@
     
     <!-- Required to receive shortcut install requests -->
     <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    
+    <!-- Optional: For accessing images on Android 13+ (API 33+) -->
+    <!-- Note: Not strictly required since we use persistable URI permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
