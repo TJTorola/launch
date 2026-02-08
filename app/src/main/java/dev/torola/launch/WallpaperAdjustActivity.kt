@@ -2,6 +2,7 @@ package dev.torola.launch
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
@@ -25,6 +26,10 @@ class WallpaperAdjustActivity : AppCompatActivity() {
     private lateinit var resetButton: Button
     private lateinit var setButton: Button
     private var imageUri: Uri? = null
+    private var shouldRestoreState = false
+    private var previousScale = 1f
+    private var previousTranslateX = 0f
+    private var previousTranslateY = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +70,14 @@ class WallpaperAdjustActivity : AppCompatActivity() {
             intent.getParcelableExtra("imageUri")
         }
 
+        // Check if we should restore previous transform state
+        shouldRestoreState = intent.getBooleanExtra("restoreState", false)
+        if (shouldRestoreState) {
+            previousScale = intent.getFloatExtra("scale", 1f)
+            previousTranslateX = intent.getFloatExtra("translateX", 0f)
+            previousTranslateY = intent.getFloatExtra("translateY", 0f)
+        }
+
         if (imageUri == null) {
             Toast.makeText(this, "Error loading image", Toast.LENGTH_SHORT).show()
             finish()
@@ -79,6 +92,13 @@ class WallpaperAdjustActivity : AppCompatActivity() {
             e.printStackTrace()
             finish()
             return
+        }
+
+        // Restore transform state if provided
+        if (shouldRestoreState) {
+            wallpaperPreview.post {
+                wallpaperPreview.setTransformState(previousScale, previousTranslateX, previousTranslateY)
+            }
         }
 
         // Setup button listeners
@@ -108,10 +128,17 @@ class WallpaperAdjustActivity : AppCompatActivity() {
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
                 }
 
-                // Save the file path in preferences
+                // Copy original image to internal storage
+                copyOriginalImageToInternalStorage()
+
+                // Save the current transform state in preferences
+                val transformState = wallpaperPreview.getTransformState()
                 val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
                 prefs.edit().apply {
                     putString("wallpaper_path", file.absolutePath)
+                    putFloat("wallpaper_scale", transformState[0])
+                    putFloat("wallpaper_translate_x", transformState[1])
+                    putFloat("wallpaper_translate_y", transformState[2])
                     remove("wallpaper_uri") // Remove old URI-based wallpaper
                     apply()
                 }
@@ -125,6 +152,20 @@ class WallpaperAdjustActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to save wallpaper: ${e.message}", Toast.LENGTH_LONG).show()
             android.util.Log.e("WallpaperAdjust", "Failed to save wallpaper", e)
+        }
+    }
+
+    private fun copyOriginalImageToInternalStorage() {
+        try {
+            val inputStream = contentResolver.openInputStream(imageUri!!)
+            inputStream?.use { input ->
+                val originalFile = File(filesDir, "wallpaper_original.png")
+                FileOutputStream(originalFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("WallpaperAdjust", "Failed to copy original image", e)
         }
     }
 

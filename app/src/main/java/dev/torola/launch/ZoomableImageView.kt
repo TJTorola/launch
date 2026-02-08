@@ -162,6 +162,22 @@ class ZoomableImageView @JvmOverloads constructor(
         invalidate()
     }
 
+    fun getTransformState(): FloatArray {
+        val values = FloatArray(9)
+        matrix.getValues(values)
+        return floatArrayOf(currentScale, values[Matrix.MTRANS_X], values[Matrix.MTRANS_Y])
+    }
+
+    fun setTransformState(scale: Float, translateX: Float, translateY: Float) {
+        calculateMinScale()
+        matrix.reset()
+        matrix.postScale(scale, scale)
+        matrix.postTranslate(translateX, translateY)
+        currentScale = scale
+        imageMatrix = matrix
+        invalidate()
+    }
+
     private fun centerImage() {
         val drawable = drawable ?: return
         val imageWidth = drawable.intrinsicWidth.toFloat() * currentScale

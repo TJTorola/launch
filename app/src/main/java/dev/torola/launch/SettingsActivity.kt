@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var backIcon: ImageView
+    private lateinit var editWallpaperButton: Button
     private lateinit var selectWallpaperButton: Button
     private lateinit var clearWallpaperButton: Button
     private lateinit var manageWidgetsButton: Button
@@ -53,6 +54,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
         
         selectWallpaperButton = findViewById(R.id.selectWallpaperButton)
+        editWallpaperButton = findViewById(R.id.editWallpaperButton)
         backIcon = findViewById(R.id.backIcon)
         backIcon.setOnClickListener { finish() }
         clearWallpaperButton = findViewById(R.id.clearWallpaperButton)
@@ -69,7 +71,12 @@ class SettingsActivity : AppCompatActivity() {
         selectWallpaperButton.setOnClickListener {
             openImagePicker()
         }
-        
+
+        // Setup edit wallpaper button
+        editWallpaperButton.setOnClickListener {
+            editExistingWallpaper()
+        }
+
         // Setup clear wallpaper button
         clearWallpaperButton.setOnClickListener {
             removeWallpaper()
@@ -126,7 +133,37 @@ class SettingsActivity : AppCompatActivity() {
         }
         imagePickerLauncher.launch(intent)
     }
-    
+
+    private fun editExistingWallpaper() {
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val wallpaperOriginalFile = java.io.File(filesDir, "wallpaper_original.png")
+
+        if (!wallpaperOriginalFile.exists()) {
+            Toast.makeText(this, "No wallpaper set", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        try {
+            val uri = Uri.fromFile(wallpaperOriginalFile)
+            val scale = prefs.getFloat("wallpaper_scale", 1f)
+            val translateX = prefs.getFloat("wallpaper_translate_x", 0f)
+            val translateY = prefs.getFloat("wallpaper_translate_y", 0f)
+
+            // Launch wallpaper adjustment activity with restore state
+            val intent = Intent(this, WallpaperAdjustActivity::class.java).apply {
+                putExtra("imageUri", uri)
+                putExtra("restoreState", true)
+                putExtra("scale", scale)
+                putExtra("translateX", translateX)
+                putExtra("translateY", translateY)
+            }
+            wallpaperAdjustLauncher.launch(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Failed to open wallpaper: ${e.message}", Toast.LENGTH_LONG).show()
+            android.util.Log.e("SettingsActivity", "Failed to edit wallpaper", e)
+        }
+    }
+
     private fun openWallpaperAdjustment(uri: Uri) {
         try {
             // Take persistent permission to access the image
@@ -140,7 +177,14 @@ class SettingsActivity : AppCompatActivity() {
                     android.util.Log.w("SettingsActivity", "Could not take persistent permission", e)
                 }
             }
-            
+
+            // Save the original URI for re-editing
+            val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+            prefs.edit().apply {
+                putString("wallpaper_uri", uri.toString())
+                apply()
+            }
+
             // Launch wallpaper adjustment activity
             val intent = Intent(this, WallpaperAdjustActivity::class.java).apply {
                 putExtra("imageUri", uri)
@@ -157,19 +201,26 @@ class SettingsActivity : AppCompatActivity() {
         prefs.edit().apply {
             remove("wallpaper_uri")
             remove("wallpaper_path")
+            remove("wallpaper_scale")
+            remove("wallpaper_translate_x")
+            remove("wallpaper_translate_y")
             apply()
         }
-        
-        // Delete the wallpaper file from internal storage
+
+        // Delete the wallpaper files from internal storage
         try {
-            val file = java.io.File(filesDir, "wallpaper.png")
-            if (file.exists()) {
-                file.delete()
+            val wallpaperFile = java.io.File(filesDir, "wallpaper.png")
+            if (wallpaperFile.exists()) {
+                wallpaperFile.delete()
+            }
+            val originalFile = java.io.File(filesDir, "wallpaper_original.png")
+            if (originalFile.exists()) {
+                originalFile.delete()
             }
         } catch (e: Exception) {
-            android.util.Log.e("SettingsActivity", "Failed to delete wallpaper file", e)
+            android.util.Log.e("SettingsActivity", "Failed to delete wallpaper files", e)
         }
-        
+
         Toast.makeText(this, "Wallpaper cleared", Toast.LENGTH_SHORT).show()
     }
     
