@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000">
@@ -11,14 +12,25 @@
         android:layout_height="match_parent"
         android:contentDescription="Wallpaper preview" />
 
+    <!-- Instructions text at top -->
+    <TextView
+        android:id="@+id/instructionsText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:text="Pinch to zoom • Drag to pan"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:background="#AA000000" />
+
     <!-- Control buttons at the bottom -->
     <LinearLayout
+        android:id="@+id/buttonContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="horizontal"
-        android:background="#AA000000"
-        android:padding="16dp">
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/cancelButton"
@@ -51,17 +63,5 @@
             android:backgroundTint="#006400"
             android:layout_marginStart="8dp" />
     </LinearLayout>
-
-    <!-- Instructions text at top -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:text="Pinch to zoom • Drag to pan"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:padding="16dp"
-        android:gravity="center"
-        android:background="#AA000000" />
 
 </FrameLayout>

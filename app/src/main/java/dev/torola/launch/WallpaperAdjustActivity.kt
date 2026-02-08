@@ -3,13 +3,18 @@ package dev.torola.launch
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import java.io.File
 import java.io.FileOutputStream
 
@@ -23,12 +28,34 @@ class WallpaperAdjustActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.isAppearanceLightStatusBars = false
+        windowInsetsController.isAppearanceLightNavigationBars = false
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+
         setContentView(R.layout.activity_wallpaper_adjust)
 
         wallpaperPreview = findViewById(R.id.wallpaperPreview)
         cancelButton = findViewById(R.id.cancelButton)
         resetButton = findViewById(R.id.resetButton)
         setButton = findViewById(R.id.setButton)
+        val buttonContainer = findViewById<View>(R.id.buttonContainer)
+        val instructionsText = findViewById<View>(R.id.instructionsText)
+
+        ViewCompat.setOnApplyWindowInsetsListener(buttonContainer) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(16, 16, 16, insets.bottom + 16)
+            windowInsets
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(instructionsText) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(insets.left, insets.top, insets.right, 25)
+            windowInsets
+        }
 
         // Get the image URI from the intent
         imageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
