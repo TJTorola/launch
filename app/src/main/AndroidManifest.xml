@@ -72,7 +72,21 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SimpleLauncher" />
-        
+
+        <!-- Shortcut management activity -->
+        <activity
+            android:name=".ShortcutManagementActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SimpleLauncher" />
+
+        <!-- Hidden apps management activity -->
+        <activity
+            android:name=".HiddenAppsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SimpleLauncher" />
+
         <!-- Activity for handling pinned shortcut requests (Android 8.0+) -->
         <activity
             android:name=".PinShortcutActivity"

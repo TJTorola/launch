@@ -18,13 +18,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class SettingsActivity : AppCompatActivity() {
-    
-    private lateinit var shortcutsRecyclerView: RecyclerView
-    private lateinit var emptyStateText: TextView
-    private lateinit var shortcutsAdapter: ShortcutsAdapter
+
     private lateinit var selectWallpaperButton: Button
     private lateinit var clearWallpaperButton: Button
     private lateinit var manageWidgetsButton: Button
+    private lateinit var manageShortcutsButton: Button
     private lateinit var manageHiddenAppsButton: Button
     private lateinit var widgetEditModeSwitch: androidx.appcompat.widget.SwitchCompat
     
@@ -52,15 +50,12 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
         
-        shortcutsRecyclerView = findViewById(R.id.shortcutsRecyclerView)
-        emptyStateText = findViewById(R.id.emptyStateText)
         selectWallpaperButton = findViewById(R.id.selectWallpaperButton)
         clearWallpaperButton = findViewById(R.id.clearWallpaperButton)
         manageWidgetsButton = findViewById(R.id.manageWidgetsButton)
+        manageShortcutsButton = findViewById(R.id.manageShortcutsButton)
         manageHiddenAppsButton = findViewById(R.id.manageHiddenAppsButton)
         widgetEditModeSwitch = findViewById(R.id.widgetEditModeSwitch)
-        
-        shortcutsRecyclerView.layoutManager = LinearLayoutManager(this)
         
         // Load widget edit mode state
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
@@ -81,9 +76,14 @@ class SettingsActivity : AppCompatActivity() {
             openWidgetManagement()
         }
 
+        // Setup manage shortcuts button
+        manageShortcutsButton.setOnClickListener {
+            openShortcutManagement()
+        }
+
         // Setup manage hidden apps button
         manageHiddenAppsButton.setOnClickListener {
-            showHiddenApps()
+            openHiddenAppsManagement()
         }
 
         // Setup widget edit mode switch
@@ -107,8 +107,6 @@ class SettingsActivity : AppCompatActivity() {
                 finish()
             }
         })
-        
-        loadShortcuts()
     }
     
     private fun openImagePicker() {
@@ -171,132 +169,19 @@ class SettingsActivity : AppCompatActivity() {
         Toast.makeText(this, "Wallpaper cleared", Toast.LENGTH_SHORT).show()
     }
     
-    private fun loadShortcuts() {
-        val prefs = getSharedPreferences("shortcuts", Context.MODE_PRIVATE)
-        val shortcutIds = prefs.getStringSet("shortcut_list", emptySet()) ?: emptySet()
-        
-        val shortcuts = shortcutIds.mapNotNull { id ->
-            val name = prefs.getString("${id}_name", null)
-            if (name != null) {
-                ShortcutItem(id, name)
-            } else {
-                null
-            }
-        }.sortedBy { it.name.lowercase() }
-        
-        if (shortcuts.isEmpty()) {
-            shortcutsRecyclerView.visibility = android.view.View.GONE
-            emptyStateText.visibility = android.view.View.VISIBLE
-        } else {
-            shortcutsRecyclerView.visibility = android.view.View.VISIBLE
-            emptyStateText.visibility = android.view.View.GONE
-            
-            shortcutsAdapter = ShortcutsAdapter(shortcuts) { shortcut ->
-                showDeleteConfirmation(shortcut)
-            }
-            shortcutsRecyclerView.adapter = shortcutsAdapter
-        }
-    }
-    
-    private fun showDeleteConfirmation(shortcut: ShortcutItem) {
-        AlertDialog.Builder(this)
-            .setTitle("Delete Shortcut")
-            .setMessage("Do you want to remove \"${shortcut.name}\" from your app list?")
-            .setPositiveButton("Delete") { _, _ ->
-                deleteShortcut(shortcut)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-    
-    private fun deleteShortcut(shortcut: ShortcutItem) {
-        val prefs = getSharedPreferences("shortcuts", Context.MODE_PRIVATE)
-        val shortcuts = prefs.getStringSet("shortcut_list", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
-        
-        shortcuts.remove(shortcut.id)
-        
-        prefs.edit().apply {
-            putStringSet("shortcut_list", shortcuts)
-            remove("${shortcut.id}_name")
-            remove("${shortcut.id}_intent")
-            remove("${shortcut.id}_shortcut_id")
-            remove("${shortcut.id}_package")
-            apply()
-        }
-        
-        // Reload the list
-        loadShortcuts()
-    }
-    
     private fun openWidgetManagement() {
         val intent = Intent(this, WidgetManagementActivity::class.java)
         startActivity(intent)
     }
 
-    private fun showHiddenApps() {
-        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
-        val hiddenPackages = prefs.getStringSet("hidden_list", emptySet())?.toList() ?: emptyList()
-
-        if (hiddenPackages.isEmpty()) {
-            Toast.makeText(this, "No hidden apps", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Get app labels for the hidden packages
-        val packageManager = packageManager
-        val hiddenApps = hiddenPackages.mapNotNull { packageName ->
-            try {
-                val appInfo = packageManager.getApplicationInfo(packageName, 0)
-                val label = packageManager.getApplicationLabel(appInfo).toString()
-                Pair(packageName, label)
-            } catch (e: Exception) {
-                // App is no longer installed, should be cleaned up
-                null
-            }
-        }.sortedBy { it.second }
-
-        if (hiddenApps.isEmpty()) {
-            // Clean up invalid entries
-            prefs.edit().putStringSet("hidden_list", emptySet()).apply()
-            Toast.makeText(this, "No hidden apps", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val appLabels = hiddenApps.map { it.second }.toTypedArray()
-
-        AlertDialog.Builder(this)
-            .setTitle("Hidden Apps")
-            .setItems(appLabels) { _, which ->
-                val selectedApp = hiddenApps[which]
-                showUnhideConfirmation(selectedApp.first, selectedApp.second)
-            }
-            .setNegativeButton("Close", null)
-            .show()
+    private fun openShortcutManagement() {
+        val intent = Intent(this, ShortcutManagementActivity::class.java)
+        startActivity(intent)
     }
 
-    private fun showUnhideConfirmation(packageName: String, appLabel: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Unhide App")
-            .setMessage("Do you want to show \"$appLabel\" in the app list again?")
-            .setPositiveButton("Unhide") { _, _ ->
-                unhideApp(packageName, appLabel)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun unhideApp(packageName: String, appLabel: String) {
-        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
-        val hiddenApps = prefs.getStringSet("hidden_list", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
-
-        hiddenApps.remove(packageName)
-
-        prefs.edit().apply {
-            putStringSet("hidden_list", hiddenApps)
-            apply()
-        }
-
-        Toast.makeText(this, "\"$appLabel\" unhidden", Toast.LENGTH_SHORT).show()
+    private fun openHiddenAppsManagement() {
+        val intent = Intent(this, HiddenAppsActivity::class.java)
+        startActivity(intent)
     }
 }
 

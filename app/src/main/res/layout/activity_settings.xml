@@ -54,6 +54,18 @@
         android:textColor="#FFFFFF"
         android:backgroundTint="#444444" />
 
+    <!-- Shortcuts Management Button -->
+    <Button
+        android:id="@+id/manageShortcutsButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:text="Manage Shortcuts"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#444444" />
+
     <!-- Hidden Apps Management Button -->
     <Button
         android:id="@+id/manageHiddenAppsButton"
@@ -75,7 +87,7 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:gravity="center_vertical">
-        
+
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -83,40 +95,11 @@
             android:text="Widget Edit Mode"
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
-        
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/widgetEditModeSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
-    
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Manage Shortcuts"
-        android:textColor="#888888"
-        android:textSize="14sp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="8dp" />
-    
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/shortcutsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#000000"
-        android:padding="8dp" />
-    
-    <TextView
-        android:id="@+id/emptyStateText"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="No shortcuts added yet"
-        android:textColor="#888888"
-        android:textSize="16sp"
-        android:gravity="center"
-        android:visibility="gone" />
 
 </LinearLayout>
