@@ -31,8 +31,17 @@ class SettingsActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
-                saveWallpaperUri(uri)
+                openWallpaperAdjustment(uri)
             }
+        }
+    }
+    
+    // Activity result launcher for wallpaper adjustment
+    private val wallpaperAdjustLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            Toast.makeText(this, "Wallpaper updated", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -81,7 +90,7 @@ class SettingsActivity : AppCompatActivity() {
         imagePickerLauncher.launch(intent)
     }
     
-    private fun saveWallpaperUri(uri: Uri) {
+    private fun openWallpaperAdjustment(uri: Uri) {
         try {
             // Take persistent permission to access the image
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -91,29 +100,18 @@ class SettingsActivity : AppCompatActivity() {
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
                     )
                 } catch (e: SecurityException) {
-                    // Some URIs don't support persistent permissions
-                    // We'll still try to use them, but they may not persist across reboots
                     android.util.Log.w("SettingsActivity", "Could not take persistent permission", e)
                 }
             }
             
-            // Test that we can actually read the image
-            contentResolver.openInputStream(uri)?.use { stream ->
-                // If we can open it, it's valid
-                stream.close()
-            } ?: throw Exception("Cannot open image")
-            
-            // Save the URI in SharedPreferences
-            val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
-            prefs.edit().apply {
-                putString("wallpaper_uri", uri.toString())
-                apply()
+            // Launch wallpaper adjustment activity
+            val intent = Intent(this, WallpaperAdjustActivity::class.java).apply {
+                putExtra("imageUri", uri)
             }
-            
-            Toast.makeText(this, "Wallpaper set successfully", Toast.LENGTH_SHORT).show()
+            wallpaperAdjustLauncher.launch(intent)
         } catch (e: Exception) {
-            Toast.makeText(this, "Failed to set wallpaper: ${e.message}", Toast.LENGTH_LONG).show()
-            android.util.Log.e("SettingsActivity", "Failed to set wallpaper", e)
+            Toast.makeText(this, "Failed to open image: ${e.message}", Toast.LENGTH_LONG).show()
+            android.util.Log.e("SettingsActivity", "Failed to open wallpaper adjustment", e)
         }
     }
     
@@ -121,8 +119,20 @@ class SettingsActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
         prefs.edit().apply {
             remove("wallpaper_uri")
+            remove("wallpaper_path")
             apply()
         }
+        
+        // Delete the wallpaper file from internal storage
+        try {
+            val file = java.io.File(filesDir, "wallpaper.png")
+            if (file.exists()) {
+                file.delete()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsActivity", "Failed to delete wallpaper file", e)
+        }
+        
         Toast.makeText(this, "Wallpaper cleared", Toast.LENGTH_SHORT).show()
     }
     

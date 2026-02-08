@@ -46,6 +46,13 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.SimpleLauncher" />
         
+        <!-- Wallpaper adjustment activity -->
+        <activity
+            android:name=".WallpaperAdjustActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.SimpleLauncher" />
+        
         <!-- Activity for handling pinned shortcut requests (Android 8.0+) -->
         <activity
             android:name=".PinShortcutActivity"

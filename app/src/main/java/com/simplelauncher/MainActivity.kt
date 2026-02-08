@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.ResolveInfoFlags
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
@@ -70,23 +71,38 @@ class MainActivity : AppCompatActivity() {
     
     private fun loadWallpaper() {
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val wallpaperUriString = prefs.getString("wallpaper_uri", null)
         
+        // First try to load from internal storage (adjusted wallpaper)
+        val wallpaperPath = prefs.getString("wallpaper_path", null)
+        if (wallpaperPath != null) {
+            try {
+                val file = java.io.File(wallpaperPath)
+                if (file.exists()) {
+                    val bitmap = BitmapFactory.decodeFile(wallpaperPath)
+                    wallpaperImageView.setImageBitmap(bitmap)
+                    wallpaperImageView.visibility = View.VISIBLE
+                    return
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        
+        // Fall back to URI-based wallpaper (for backward compatibility)
+        val wallpaperUriString = prefs.getString("wallpaper_uri", null)
         if (wallpaperUriString != null) {
             try {
                 val uri = Uri.parse(wallpaperUriString)
-                // Use setImageURI for proper aspect ratio handling
                 wallpaperImageView.setImageURI(uri)
                 wallpaperImageView.visibility = View.VISIBLE
+                return
             } catch (e: Exception) {
-                // If wallpaper can't be loaded, hide the ImageView
-                wallpaperImageView.visibility = View.GONE
                 e.printStackTrace()
             }
-        } else {
-            // No wallpaper set, hide the ImageView (black background will show)
-            wallpaperImageView.visibility = View.GONE
         }
+        
+        // No wallpaper set, hide the ImageView (black background will show)
+        wallpaperImageView.visibility = View.GONE
     }
     
     override fun onNewIntent(intent: Intent) {
