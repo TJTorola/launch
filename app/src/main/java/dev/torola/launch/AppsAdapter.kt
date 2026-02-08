@@ -46,7 +46,7 @@ class AppsAdapter(
             allApps
         } else {
             allApps.filter { app ->
-                app.label.contains(query, ignoreCase = true)
+                app.label.startsWith(query, ignoreCase = true)
             }
         }
         notifyDataSetChanged()
