@@ -23,6 +23,7 @@
             android:exported="true"
             android:launchMode="singleTask"
             android:stateNotNeeded="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.SimpleLauncher">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,6 +43,7 @@
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.SimpleLauncher" />
         
         <!-- Activity for handling pinned shortcut requests (Android 8.0+) -->
@@ -50,6 +52,7 @@
             android:exported="true"
             android:excludeFromRecents="true"
             android:autoRemoveFromRecents="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.SimpleLauncher">
             <intent-filter>
                 <action android:name="android.content.pm.action.CONFIRM_PIN_SHORTCUT" />
