@@ -22,17 +22,49 @@ class ZoomableImageView @JvmOverloads constructor(
     private val start = PointF()
     private val mid = PointF()
     
-    private var minScale = 1f
+    private var minScale = 0.1f // Will be calculated dynamically
     private var maxScale = 4f
     private var currentScale = 1f
-    
+
     private val scaleDetector: ScaleGestureDetector
-    
+
     init {
         scaleType = ScaleType.MATRIX
         imageMatrix = matrix
-        
+
         scaleDetector = ScaleGestureDetector(context, ScaleListener())
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        if (changed) {
+            calculateMinScale()
+        }
+    }
+
+    override fun setImageURI(uri: android.net.Uri?) {
+        super.setImageURI(uri)
+        post {
+            calculateMinScale()
+            resetScale()
+        }
+    }
+
+    private fun calculateMinScale() {
+        val drawable = drawable ?: return
+        if (width == 0 || height == 0) return
+
+        val imageWidth = drawable.intrinsicWidth.toFloat()
+        val imageHeight = drawable.intrinsicHeight.toFloat()
+
+        if (imageWidth == 0f || imageHeight == 0f) return
+
+        // Calculate scale to fit entire image in view
+        val scaleX = width.toFloat() / imageWidth
+        val scaleY = height.toFloat() / imageHeight
+
+        // Use the smaller scale to ensure entire image is visible
+        minScale = minOf(scaleX, scaleY)
     }
     
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -123,10 +155,37 @@ class ZoomableImageView @JvmOverloads constructor(
     }
     
     fun resetScale() {
-        currentScale = 1f
+        calculateMinScale()
+        currentScale = minScale
         matrix.reset()
+        matrix.postScale(minScale, minScale)
+        centerImage()
         imageMatrix = matrix
         invalidate()
+    }
+
+    private fun centerImage() {
+        val drawable = drawable ?: return
+        val imageWidth = drawable.intrinsicWidth.toFloat() * currentScale
+        val imageHeight = drawable.intrinsicHeight.toFloat() * currentScale
+
+        val viewWidth = width.toFloat()
+        val viewHeight = height.toFloat()
+
+        // Center the image if it's smaller than the view
+        val translateX = if (imageWidth < viewWidth) {
+            (viewWidth - imageWidth) / 2f
+        } else {
+            0f
+        }
+
+        val translateY = if (imageHeight < viewHeight) {
+            (viewHeight - imageHeight) / 2f
+        } else {
+            0f
+        }
+
+        matrix.postTranslate(translateX, translateY)
     }
     
     private inner class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener() {
