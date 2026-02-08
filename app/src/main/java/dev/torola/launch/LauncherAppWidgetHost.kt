@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetHost
 import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetProviderInfo
 import android.content.Context
+import android.util.TypedValue
 
 /**
  * Custom AppWidgetHost for the launcher
@@ -79,7 +80,13 @@ class LauncherAppWidgetHostView(context: Context) : AppWidgetHostView(context) {
             removeAllViews()
             val textView = android.widget.TextView(context).apply {
                 text = "Widget couldn't load"
-                setTextColor(0xFF888888.toInt())
+                val typedValue = TypedValue()
+                context.theme.resolveAttribute(
+                    com.google.android.material.R.attr.colorOnSurfaceVariant,
+                    typedValue,
+                    true
+                )
+                setTextColor(typedValue.data)
                 textSize = 14f
                 gravity = android.view.Gravity.CENTER
                 setPadding(16, 16, 16, 16)

@@ -28,6 +28,12 @@ class WidgetPickerActivity : AppCompatActivity() {
         widgetPickerRecyclerView = findViewById(R.id.widgetPickerRecyclerView)
         emptyStateText = findViewById(R.id.emptyStateText)
         
+        // Setup back icon click listener
+        findViewById<android.widget.ImageView>(R.id.backIcon).setOnClickListener {
+            setResult(Activity.RESULT_CANCELED)
+            finish()
+        }
+        
         widgetPickerRecyclerView.layoutManager = LinearLayoutManager(this)
         
         // Handle back button press

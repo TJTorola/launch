@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetHostView
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
@@ -23,12 +24,25 @@ class ResizableWidgetView(
     private val widgetView: AppWidgetHostView
     private val resizeHandleSize = 80f // Size of corner resize handle in pixels
     private val borderPaint = Paint().apply {
-        color = 0x80FFFFFF.toInt() // Semi-transparent white
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(
+            com.google.android.material.R.attr.colorPrimary,
+            typedValue,
+            true
+        )
+        color = typedValue.data
+        alpha = (255 * 0.5).toInt() // 50% opacity per Material guidelines
         style = Paint.Style.STROKE
         strokeWidth = 4f
     }
     private val handlePaint = Paint().apply {
-        color = 0xFFFFFFFF.toInt() // Solid white
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(
+            com.google.android.material.R.attr.colorPrimary,
+            typedValue,
+            true
+        )
+        color = typedValue.data // Full opacity for handle
         style = Paint.Style.FILL
     }
     

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -25,7 +26,7 @@
             android:id="@+id/widgetName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             android:textStyle="bold"
             android:maxLines="1"
@@ -35,19 +36,19 @@
             android:id="@+id/widgetSize"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#888888"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="14sp"
             android:maxLines="1"
             android:ellipsize="end" />
     </LinearLayout>
     
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/widgetActionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Add"
-        android:textColor="#FFFFFF"
-        android:backgroundTint="#333333"
-        android:minWidth="80dp" />
+        app:cornerRadius="12dp"
+        android:minWidth="80dp"
+        style="@style/Widget.Material3.Button.TonalButton" />
         
 </LinearLayout>

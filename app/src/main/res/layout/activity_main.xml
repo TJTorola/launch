@@ -17,7 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="#000000"
+        android:background="?attr/colorSurface"
+        android:alpha="0.85"
         android:visibility="gone"
         android:fitsSystemWindows="true">
 
@@ -26,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:background="#000000"
+            android:background="?attr/colorSurface"
             android:padding="16dp"
             android:clipToPadding="false" />
 
@@ -44,8 +45,8 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="16dp"
                 android:hint="Search apps..."
-                android:textColor="#FFFFFF"
-                android:textColorHint="#888888"
+                android:textColor="?attr/colorOnSurface"
+                android:textColorHint="?attr/colorOnSurfaceVariant"
                 android:background="@android:color/transparent"
                 android:textSize="18sp"
                 android:singleLine="true"
@@ -58,7 +59,7 @@
                 android:layout_height="24dp"
                 android:src="@drawable/ic_settings"
                 android:contentDescription="Settings"
-                android:tint="#FFFFFF" />
+                android:tint="?attr/colorOnSurfaceVariant" />
 
         </LinearLayout>
     </LinearLayout>

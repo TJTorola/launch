@@ -3,6 +3,7 @@ package dev.torola.launch
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.util.TypedValue
 import android.view.View
 
 /**
@@ -11,7 +12,14 @@ import android.view.View
 class GridOverlayView(context: Context) : View(context) {
     
     private val dotPaint = Paint().apply {
-        color = 0x60FFFFFF.toInt() // Semi-transparent white dots
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(
+            com.google.android.material.R.attr.colorOnSurface,
+            typedValue,
+            true
+        )
+        color = typedValue.data
+        alpha = (255 * 0.38).toInt() // 38% opacity per Material guidelines
         style = Paint.Style.FILL
         isAntiAlias = true
     }
