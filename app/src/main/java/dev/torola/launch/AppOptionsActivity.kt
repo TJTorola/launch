@@ -1,11 +1,11 @@
 package dev.torola.launch
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -21,10 +21,9 @@ class AppOptionsActivity : AppCompatActivity() {
     private lateinit var packageNameText: TextView
     private lateinit var hideCard: com.google.android.material.card.MaterialCardView
     private lateinit var hideSwitch: com.google.android.material.materialswitch.MaterialSwitch
-    private lateinit var uninstallButton: com.google.android.material.card.MaterialCardView
-    private lateinit var uninstallTooltip: ImageView
     private lateinit var hideStatus: TextView
-    private lateinit var uninstallStatus: TextView
+    private lateinit var settingsButton: com.google.android.material.card.MaterialCardView
+    private lateinit var settingsStatus: TextView
 
     private var packageName: String = ""
     private var className: String = ""
@@ -64,10 +63,9 @@ class AppOptionsActivity : AppCompatActivity() {
         packageNameText = findViewById(R.id.packageNameText)
         hideCard = findViewById(R.id.hideCard)
         hideSwitch = findViewById(R.id.hideSwitch)
-        uninstallButton = findViewById(R.id.uninstallButton)
-        uninstallTooltip = findViewById(R.id.uninstallTooltip)
         hideStatus = findViewById(R.id.hideStatus)
-        uninstallStatus = findViewById(R.id.uninstallStatus)
+        settingsButton = findViewById(R.id.settingsButton)
+        settingsStatus = findViewById(R.id.settingsStatus)
     }
 
     private fun loadAppInfo() {
@@ -97,28 +95,17 @@ class AppOptionsActivity : AppCompatActivity() {
 
     private fun updateOptionStates(isShortcut: Boolean) {
         val launcherPackage = applicationContext.packageName
-        val canUninstall = !isShortcut && packageName != launcherPackage
 
         if (isShortcut) {
             hideSwitch.isEnabled = false
             hideSwitch.isChecked = false
-            uninstallButton.alpha = 0.5f
-            uninstallButton.isEnabled = false
             hideStatus.text = "Not applicable to shortcuts"
-            uninstallStatus.text = "Not applicable to shortcuts"
         } else {
             hideSwitch.isEnabled = true
             hideSwitch.isChecked = isHidden
-            uninstallButton.alpha = if (canUninstall) 1.0f else 0.5f
-            uninstallButton.isEnabled = canUninstall
-
             hideStatus.text = if (isHidden) "App is hidden" else "Hide from app list"
-            uninstallStatus.text = when {
-                packageName == launcherPackage -> "Cannot uninstall the launcher"
-                isSystemApp() -> "System apps cannot be uninstalled without root"
-                else -> "Remove app from device"
-            }
         }
+        settingsStatus.text = "Open app system settings"
     }
 
     private fun isSystemApp(): Boolean {
@@ -141,44 +128,9 @@ class AppOptionsActivity : AppCompatActivity() {
             }
         }
 
-        uninstallButton.setOnClickListener {
-            val launcherPackage = applicationContext.packageName
-            if (!isShortcut && packageName != launcherPackage) {
-                showUninstallConfirmation()
-            }
+        settingsButton.setOnClickListener {
+            openSystemSettings()
         }
-
-        uninstallTooltip.setOnClickListener {
-            val launcherPackage = applicationContext.packageName
-            showTooltipDialog(
-                "Uninstall Option",
-                when {
-                    isShortcut -> "Uninstalling is not available for shortcuts. Delete the shortcut from Shortcut Management instead."
-                    packageName == launcherPackage -> "The launcher app cannot be uninstalled as it is the current default launcher."
-                    isSystemApp() -> "System apps cannot be uninstalled without root access. Consider hiding this app instead."
-                    else -> "Uninstall the app from your device. This action cannot be undone."
-                }
-            )
-        }
-    }
-
-    private fun showUninstallConfirmation() {
-        AlertDialog.Builder(this)
-            .setTitle("Uninstall App")
-            .setMessage("Uninstall \"${appName.text}\"? This action cannot be undone.")
-            .setPositiveButton("Uninstall") { _, _ ->
-                uninstallApp()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showTooltipDialog(title: String, message: String) {
-        AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton("OK", null)
-            .show()
     }
 
     private fun hideApp() {
@@ -213,14 +165,14 @@ class AppOptionsActivity : AppCompatActivity() {
         Toast.makeText(this, "\"${appName.text}\" unhidden", Toast.LENGTH_SHORT).show()
     }
 
-    private fun uninstallApp() {
+    private fun openSystemSettings() {
         try {
-            val uri = Uri.fromParts("package", packageName, null)
-            val intent = Intent(Intent.ACTION_DELETE, uri)
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
             startActivity(intent)
-            finish()
         } catch (e: Exception) {
-            Toast.makeText(this, "Failed to uninstall: ${e.message}", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Failed to open settings: ${e.message}", Toast.LENGTH_SHORT).show()
             e.printStackTrace()
         }
     }
