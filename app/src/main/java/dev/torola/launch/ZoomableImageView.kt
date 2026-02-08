@@ -59,12 +59,10 @@ class ZoomableImageView @JvmOverloads constructor(
 
         if (imageWidth == 0f || imageHeight == 0f) return
 
-        // Calculate scale to fit entire image in view
         val scaleX = width.toFloat() / imageWidth
         val scaleY = height.toFloat() / imageHeight
 
-        // Use the smaller scale to ensure entire image is visible
-        minScale = minOf(scaleX, scaleY)
+        minScale = maxOf(scaleX, scaleY)
     }
     
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -172,18 +170,8 @@ class ZoomableImageView @JvmOverloads constructor(
         val viewWidth = width.toFloat()
         val viewHeight = height.toFloat()
 
-        // Center the image if it's smaller than the view
-        val translateX = if (imageWidth < viewWidth) {
-            (viewWidth - imageWidth) / 2f
-        } else {
-            0f
-        }
-
-        val translateY = if (imageHeight < viewHeight) {
-            (viewHeight - imageHeight) / 2f
-        } else {
-            0f
-        }
+        val translateX = (viewWidth - imageWidth) / 2f
+        val translateY = (viewHeight - imageHeight) / 2f
 
         matrix.postTranslate(translateX, translateY)
     }
