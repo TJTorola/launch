@@ -3,16 +3,7 @@
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000">
-
-    <!-- Wallpaper background image -->
-    <ImageView
-        android:id="@+id/wallpaperImageView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:contentDescription="Wallpaper background"
-        android:visibility="gone" />
+    android:background="@android:color/transparent">
 
     <!-- Widget container for home screen widgets -->
     <FrameLayout

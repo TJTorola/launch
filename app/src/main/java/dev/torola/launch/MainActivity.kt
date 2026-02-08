@@ -1,6 +1,7 @@
 package dev.torola.launch
 
 import android.app.PendingIntent
+import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
@@ -8,9 +9,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.ResolveInfoFlags
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
-import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
@@ -44,7 +43,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var searchInput: EditText
     private lateinit var appsRecyclerView: RecyclerView
     private lateinit var appsAdapter: AppsAdapter
-    private lateinit var wallpaperImageView: ImageView
     private lateinit var widgetContainer: FrameLayout
     private lateinit var widgetHost: LauncherAppWidgetHost
     private lateinit var widgetManagerHelper: WidgetManagerHelper
@@ -56,17 +54,18 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Show system wallpaper behind this window
+        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER)
+        
         // Enable edge-to-edge display (transparent system bars)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         
-        // Make status bar and navigation bar icons light (white) for better visibility on dark wallpapers
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
         windowInsetsController.isAppearanceLightStatusBars = false
         windowInsetsController.isAppearanceLightNavigationBars = false
         
         setContentView(R.layout.activity_main)
 
-        wallpaperImageView = findViewById(R.id.wallpaperImageView)
         appDrawerLayout = findViewById(R.id.appDrawerLayout)
         searchInput = findViewById(R.id.searchInput)
         appsRecyclerView = findViewById(R.id.appsRecyclerView)
@@ -94,7 +93,6 @@ class MainActivity : AppCompatActivity() {
         
         loadApps()
         setupSearchInput()
-        loadWallpaper()
         loadWidgets()
         
         gestureDetector = GestureDetectorCompat(this, SwipeGestureListener())
@@ -107,8 +105,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         // Reload apps when returning to launcher (e.g., after uninstalling an app)
         loadApps()
-        // Reload wallpaper when returning to launcher (e.g., after changing it in settings)
-        loadWallpaper()
         // Reload widgets in case they were added/removed
         loadWidgets()
         // Update widget edit mode based on settings
@@ -125,42 +121,6 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         // Stop listening for widget updates
         widgetHost.stopListeningIfNeeded()
-    }
-    
-    private fun loadWallpaper() {
-        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
-        
-        // First try to load from internal storage (adjusted wallpaper)
-        val wallpaperPath = prefs.getString("wallpaper_path", null)
-        if (wallpaperPath != null) {
-            try {
-                val file = java.io.File(wallpaperPath)
-                if (file.exists()) {
-                    val bitmap = BitmapFactory.decodeFile(wallpaperPath)
-                    wallpaperImageView.setImageBitmap(bitmap)
-                    wallpaperImageView.visibility = View.VISIBLE
-                    return
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        
-        // Fall back to URI-based wallpaper (for backward compatibility)
-        val wallpaperUriString = prefs.getString("wallpaper_uri", null)
-        if (wallpaperUriString != null) {
-            try {
-                val uri = Uri.parse(wallpaperUriString)
-                wallpaperImageView.setImageURI(uri)
-                wallpaperImageView.visibility = View.VISIBLE
-                return
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        
-        // No wallpaper set, hide the ImageView (black background will show)
-        wallpaperImageView.visibility = View.GONE
     }
     
     private fun loadWidgets() {

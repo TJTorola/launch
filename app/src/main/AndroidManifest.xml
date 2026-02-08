@@ -18,6 +18,9 @@
     <!-- Note: Not strictly required since we use persistable URI permissions -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <!-- Required to access system wallpaper on older Android versions -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
     <application
         android:allowBackup="true"
         android:label="Launch"
@@ -48,13 +51,6 @@
         <!-- Settings activity for managing shortcuts -->
         <activity
             android:name=".SettingsActivity"
-            android:exported="false"
-            android:screenOrientation="portrait"
-            android:theme="@style/Theme.Launch" />
-        
-        <!-- Wallpaper adjustment activity -->
-        <activity
-            android:name=".WallpaperAdjustActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Launch" />

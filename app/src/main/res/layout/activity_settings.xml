@@ -59,50 +59,16 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp" />
 
-            <LinearLayout
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/selectWallpaperButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/editWallpaperButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Adjust"
-                    android:textColor="@android:color/white"
-                    app:strokeColor="#444444"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="12dp"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_marginEnd="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/selectWallpaperButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="New"
-                    android:textColor="@android:color/white"
-                    app:strokeColor="#444444"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="12dp"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_marginEnd="8dp" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/clearWallpaperButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Clear"
-                    android:textColor="@android:color/white"
-                    app:strokeColor="#444444"
-                    app:strokeWidth="1dp"
-                    app:cornerRadius="12dp"
-                    style="@style/Widget.Material3.Button.OutlinedButton" />
-
-            </LinearLayout>
+                android:text="Select Wallpaper"
+                android:textColor="@android:color/white"
+                app:strokeColor="#444444"
+                app:strokeWidth="1dp"
+                app:cornerRadius="12dp"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
 
         </LinearLayout>
 
