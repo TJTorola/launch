@@ -397,11 +397,17 @@ class MainActivity : AppCompatActivity() {
             packageManager.queryIntentActivities(mainIntent, 0)
         }
         
+        val customNamePrefs = getSharedPreferences("app_names", Context.MODE_PRIVATE)
+        
         val apps = resolveInfoList
             .map { resolveInfo ->
+                val pkgName = resolveInfo.activityInfo.packageName
+                val appName = resolveInfo.loadLabel(packageManager).toString()
+                val customName = customNamePrefs.getString("${pkgName}_custom_name", null)
+                
                 AppInfo(
-                    label = resolveInfo.loadLabel(packageManager).toString(),
-                    packageName = resolveInfo.activityInfo.packageName,
+                    label = customName ?: appName,
+                    packageName = pkgName,
                     className = resolveInfo.activityInfo.name,
                     icon = resolveInfo.loadIcon(packageManager)
                 )
@@ -409,7 +415,7 @@ class MainActivity : AppCompatActivity() {
             .toMutableList()
         
         // Add shortcuts to the list
-        val shortcuts = loadShortcuts()
+        val shortcuts = loadShortcuts(customNamePrefs)
         apps.addAll(shortcuts)
 
         // Filter out hidden apps
@@ -437,12 +443,13 @@ class MainActivity : AppCompatActivity() {
         appsRecyclerView.adapter = appsAdapter
     }
     
-    private fun loadShortcuts(): List<AppInfo> {
+    private fun loadShortcuts(customNamePrefs: android.content.SharedPreferences = getSharedPreferences("app_names", Context.MODE_PRIVATE)): List<AppInfo> {
         val prefs = getSharedPreferences("shortcuts", Context.MODE_PRIVATE)
         val shortcutIds = prefs.getStringSet("shortcut_list", emptySet()) ?: emptySet()
         
         return shortcutIds.mapNotNull { id ->
             val name = prefs.getString("${id}_name", null)
+            val customName = customNamePrefs.getString("${id}_custom_name", null)
             
             // Check if this is a pinned shortcut (has shortcut_id) or legacy shortcut (has intent)
             val shortcutId = prefs.getString("${id}_shortcut_id", null)
@@ -450,7 +457,7 @@ class MainActivity : AppCompatActivity() {
             
             if (name != null && (shortcutId != null || intentUri != null)) {
                 AppInfo(
-                    label = name,
+                    label = customName ?: name,
                     packageName = id, // Use our ID as package name
                     className = "",
                     icon = packageManager.defaultActivityIcon

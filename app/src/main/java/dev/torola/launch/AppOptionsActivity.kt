@@ -6,13 +6,19 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doOnTextChanged
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.google.android.material.textfield.TextInputLayout
+import com.google.android.material.textfield.TextInputEditText
 
 class AppOptionsActivity : AppCompatActivity() {
 
@@ -22,6 +28,9 @@ class AppOptionsActivity : AppCompatActivity() {
     private lateinit var hideCard: com.google.android.material.card.MaterialCardView
     private lateinit var hideSwitch: com.google.android.material.materialswitch.MaterialSwitch
     private lateinit var hideStatus: TextView
+    private lateinit var renameCard: com.google.android.material.card.MaterialCardView
+    private lateinit var renameInputLayout: TextInputLayout
+    private lateinit var renameTextInput: TextInputEditText
     private lateinit var settingsButton: com.google.android.material.card.MaterialCardView
     private lateinit var settingsStatus: TextView
 
@@ -30,6 +39,7 @@ class AppOptionsActivity : AppCompatActivity() {
     private var appLabel: String = ""
     private var isShortcut: Boolean = false
     private var isHidden: Boolean = false
+    private var originalAppName: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,6 +74,9 @@ class AppOptionsActivity : AppCompatActivity() {
         hideCard = findViewById(R.id.hideCard)
         hideSwitch = findViewById(R.id.hideSwitch)
         hideStatus = findViewById(R.id.hideStatus)
+        renameCard = findViewById(R.id.renameCard)
+        renameInputLayout = findViewById(R.id.renameInputLayout)
+        renameTextInput = findViewById(R.id.renameTextInput)
         settingsButton = findViewById(R.id.settingsButton)
         findViewById<ImageView>(R.id.backIcon).setOnClickListener { finish() }
         settingsStatus = findViewById(R.id.settingsStatus)
@@ -75,11 +88,13 @@ class AppOptionsActivity : AppCompatActivity() {
                 appIcon.setImageDrawable(packageManager.defaultActivityIcon)
                 appName.text = appLabel
                 packageNameText.text = "Shortcut"
+                originalAppName = appLabel
                 updateOptionStates(true)
             } else {
                 val appInfo = packageManager.getApplicationInfo(packageName, 0)
                 appIcon.setImageDrawable(packageManager.getApplicationIcon(appInfo))
-                appName.text = packageManager.getApplicationLabel(appInfo).toString()
+                val label = packageManager.getApplicationLabel(appInfo).toString()
+                originalAppName = label
                 packageNameText.text = packageName
 
                 val hiddenPrefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
@@ -95,8 +110,6 @@ class AppOptionsActivity : AppCompatActivity() {
     }
 
     private fun updateOptionStates(isShortcut: Boolean) {
-        val launcherPackage = applicationContext.packageName
-
         if (isShortcut) {
             hideSwitch.isEnabled = false
             hideSwitch.isChecked = false
@@ -107,6 +120,17 @@ class AppOptionsActivity : AppCompatActivity() {
             hideStatus.text = if (isHidden) "App is hidden" else "Hide from app list"
         }
         settingsStatus.text = "Open app system settings"
+
+        appName.text = originalAppName
+
+        val customNamePrefs = getSharedPreferences("app_names", Context.MODE_PRIVATE)
+        val customName = customNamePrefs.getString("${packageName}_custom_name", null)
+        if (customName != null) {
+            renameTextInput.setText(customName)
+        } else {
+            renameTextInput.setText(originalAppName)
+        }
+        updateClearIconForText()
     }
 
     private fun isSystemApp(): Boolean {
@@ -129,8 +153,47 @@ class AppOptionsActivity : AppCompatActivity() {
             }
         }
 
+        renameInputLayout.setEndIconOnClickListener {
+            renameTextInput.setText(originalAppName)
+            saveCurrentName()
+            updateClearIconForText()
+        }
+
+        renameTextInput.doOnTextChanged { text, _, _, _ ->
+            updateClearIconForText()
+        }
+
+        renameTextInput.setOnFocusChangeListener { _, hasFocus ->
+            if (!hasFocus) {
+                saveCurrentName()
+            }
+        }
+
+        renameTextInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                saveCurrentName()
+                renameTextInput.clearFocus()
+                hideKeyboard()
+                true
+            } else {
+                false
+            }
+        }
+
         settingsButton.setOnClickListener {
             openSystemSettings()
+        }
+    }
+
+    private fun updateClearIconForText() {
+        val text = renameTextInput.text?.toString() ?: ""
+        val customNamePrefs = getSharedPreferences("app_names", Context.MODE_PRIVATE)
+        val currentCustomName = customNamePrefs.getString("${packageName}_custom_name", null)
+        
+        renameInputLayout.endIconMode = if (text.isNotEmpty() && text != originalAppName) {
+            com.google.android.material.textfield.TextInputLayout.END_ICON_CLEAR_TEXT
+        } else {
+            com.google.android.material.textfield.TextInputLayout.END_ICON_NONE
         }
     }
 
@@ -175,6 +238,30 @@ class AppOptionsActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Toast.makeText(this, "Failed to open settings: ${e.message}", Toast.LENGTH_SHORT).show()
             e.printStackTrace()
+        }
+    }
+
+    private fun hideKeyboard() {
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(renameTextInput.windowToken, 0)
+    }
+
+    private fun saveCurrentName() {
+        val newName = renameTextInput.text?.toString()?.trim() ?: ""
+        val customNamePrefs = getSharedPreferences("app_names", Context.MODE_PRIVATE)
+        val currentCustomName = customNamePrefs.getString("${packageName}_custom_name", null)
+
+        val prefs = customNamePrefs
+
+        if (newName.isNotEmpty() && newName != currentCustomName && newName != originalAppName) {
+            prefs.edit().putString("${packageName}_custom_name", newName).apply()
+        } else if (newName == originalAppName || newName.isEmpty()) {
+            if (currentCustomName != null) {
+                prefs.edit().remove("${packageName}_custom_name").apply()
+            }
+            if (newName.isEmpty()) {
+                renameTextInput.setText(originalAppName)
+            }
         }
     }
 
