@@ -44,8 +44,7 @@ class WidgetManagementActivity : AppCompatActivity() {
             // Widget configured successfully, save it
             if (pendingWidgetId != -1) {
                 saveWidget(pendingWidgetId)
-                enableEditMode()
-                Toast.makeText(this, "Widget added. Edit mode enabled.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Widget added. Long-press to enter edit mode.", Toast.LENGTH_SHORT).show()
             }
         } else {
             // Configuration cancelled, clean up widget ID
@@ -222,8 +221,7 @@ class WidgetManagementActivity : AppCompatActivity() {
         } else {
             // No configuration needed, save directly
             saveWidget(widgetId)
-            enableEditMode()
-            Toast.makeText(this, "Widget added. Edit mode enabled.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Widget added. Long-press to enter edit mode.", Toast.LENGTH_SHORT).show()
             loadWidgets()
         }
     }
@@ -272,12 +270,4 @@ class WidgetManagementActivity : AppCompatActivity() {
         }
     }
     
-    private fun enableEditMode() {
-        // Enable widget edit mode in settings
-        val settingsPrefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
-        settingsPrefs.edit().apply {
-            putBoolean("widget_edit_mode", true)
-            apply()
-        }
     }
-}
