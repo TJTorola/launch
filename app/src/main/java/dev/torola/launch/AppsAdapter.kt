@@ -45,9 +45,18 @@ class AppsAdapter(
         filteredApps = if (query.isEmpty()) {
             allApps
         } else {
-            allApps.filter { app ->
-                app.label.startsWith(query, ignoreCase = true)
-            }
+            val lowerQuery = query.lowercase()
+            allApps
+                .filter { app ->
+                    app.label.lowercase().contains(lowerQuery)
+                }
+                .sortedWith(
+                    compareBy<AppInfo> { app ->
+                        !app.label.lowercase().startsWith(lowerQuery)
+                    }.thenBy { app ->
+                        app.label.lowercase()
+                    }
+                )
         }
         notifyDataSetChanged()
     }
