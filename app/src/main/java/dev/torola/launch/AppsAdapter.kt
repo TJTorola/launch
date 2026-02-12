@@ -3,22 +3,27 @@ package dev.torola.launch
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class AppsAdapter(
     private val allApps: List<AppInfo>,
     private val onAppClick: (AppInfo) -> Unit,
-    private val onAppLongPress: (AppInfo) -> Unit
+    private val onAppLongPress: (AppInfo) -> Unit,
+    private val showIcons: Boolean = false
 ) : RecyclerView.Adapter<AppsAdapter.AppViewHolder>() {
 
     private var filteredApps: List<AppInfo> = allApps
 
     inner class AppViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val appIcon: ImageView = itemView.findViewById(R.id.appIcon)
         val appLabel: TextView = itemView.findViewById(R.id.appLabel)
 
         fun bind(appInfo: AppInfo) {
             appLabel.text = appInfo.label
+            appIcon.setImageDrawable(appInfo.icon)
+            appIcon.visibility = if (showIcons) View.VISIBLE else View.GONE
             itemView.setOnClickListener {
                 onAppClick(appInfo)
             }

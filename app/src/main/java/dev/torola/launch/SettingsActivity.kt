@@ -18,6 +18,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var manageShortcutsButton: Button
     private lateinit var manageHiddenAppsButton: Button
     private lateinit var widgetEditModeSwitch: MaterialSwitch
+    private lateinit var showIconsSwitch: MaterialSwitch
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,10 +31,12 @@ class SettingsActivity : AppCompatActivity() {
         manageShortcutsButton = findViewById(R.id.manageShortcutsButton)
         manageHiddenAppsButton = findViewById(R.id.manageHiddenAppsButton)
         widgetEditModeSwitch = findViewById(R.id.widgetEditModeSwitch)
+        showIconsSwitch = findViewById(R.id.showIconsSwitch)
 
         // Load widget edit mode state
         val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
         widgetEditModeSwitch.isChecked = prefs.getBoolean("widget_edit_mode", false)
+        showIconsSwitch.isChecked = prefs.getBoolean("show_app_icons", false)
 
         // Setup wallpaper button to open Wallpaper & Style settings
         selectWallpaperButton.setOnClickListener {
@@ -80,6 +83,14 @@ class SettingsActivity : AppCompatActivity() {
                 "Widget edit mode disabled"
             }
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+        }
+
+        // Setup show icons switch
+        showIconsSwitch.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().apply {
+                putBoolean("show_app_icons", isChecked)
+                apply()
+            }
         }
 
         // Handle back button press

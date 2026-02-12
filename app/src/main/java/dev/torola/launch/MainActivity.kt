@@ -413,13 +413,17 @@ class MainActivity : AppCompatActivity() {
         apps.addAll(shortcuts)
 
         // Filter out hidden apps
-        val prefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
-        val hiddenApps = prefs.getStringSet("hidden_list", emptySet()) ?: emptySet()
+        val prefs = getSharedPreferences("settings", Context.MODE_PRIVATE)
+        val hiddenAppsPrefs = getSharedPreferences("hidden_apps", Context.MODE_PRIVATE)
+        val hiddenApps = hiddenAppsPrefs.getStringSet("hidden_list", emptySet()) ?: emptySet()
         apps.removeAll { appInfo -> hiddenApps.contains(appInfo.packageName) }
 
         // Sort all apps and shortcuts alphabetically
         apps.sortBy { it.label.lowercase() }
-        
+
+        // Get show icons setting
+        val showIcons = prefs.getBoolean("show_app_icons", false)
+
         appsAdapter = AppsAdapter(
             apps,
             onAppClick = { appInfo ->
@@ -427,7 +431,8 @@ class MainActivity : AppCompatActivity() {
             },
             onAppLongPress = { appInfo ->
                 showUninstallDialog(appInfo)
-            }
+            },
+            showIcons = showIcons
         )
         appsRecyclerView.adapter = appsAdapter
     }
