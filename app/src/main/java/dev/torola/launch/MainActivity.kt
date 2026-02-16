@@ -95,6 +95,40 @@ class MainActivity : AppCompatActivity(),
         
         private val SWIPE_THRESHOLD = 100
         private val SWIPE_VELOCITY_THRESHOLD = 100
+        private val LONG_PRESS_THRESHOLD = 50f
+        
+        private var initialTouchX: Float = 0f
+        private var initialTouchY: Float = 0f
+        private var movementExceeded: Boolean = false
+
+        override fun onDown(e: MotionEvent): Boolean {
+            initialTouchX = e.x
+            initialTouchY = e.y
+            movementExceeded = false
+            return true
+        }
+        
+        override fun onScroll(
+            e1: MotionEvent?,
+            e2: MotionEvent,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean {
+            val diffX = e2.x - initialTouchX
+            val diffY = e2.y - initialTouchY
+            
+            if (kotlin.math.abs(diffX) > LONG_PRESS_THRESHOLD || kotlin.math.abs(diffY) > LONG_PRESS_THRESHOLD) {
+                movementExceeded = true
+            }
+            return false
+        }
+        
+        override fun onLongPress(e: MotionEvent) {
+            if (!movementExceeded && !isAppDrawerVisible) {
+                val widgetFragment = fragmentManager.findFragmentByTag("widget_fragment") as? WidgetFragment
+                widgetFragment?.toggleEditMode()
+            }
+        }
 
         override fun onFling(
             e1: MotionEvent?,

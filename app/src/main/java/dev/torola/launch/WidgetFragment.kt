@@ -2,15 +2,12 @@ package dev.torola.launch
 
 import android.content.Context
 import android.os.Bundle
-import android.view.GestureDetector
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.GestureDetectorCompat
 import androidx.fragment.app.Fragment
 
 class WidgetFragment : Fragment() {
@@ -19,9 +16,9 @@ class WidgetFragment : Fragment() {
     private lateinit var widgetHost: LauncherAppWidgetHost
     private lateinit var widgetManagerHelper: WidgetManagerHelper
     private lateinit var gridOverlay: GridOverlayView
-    private lateinit var gestureDetector: GestureDetectorCompat
     
-    private var isEditMode = false
+    var isEditMode = false
+        private set
     
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         return inflater.inflate(R.layout.fragment_widget, container, false)
@@ -30,9 +27,6 @@ class WidgetFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         widgetContainer = view.findViewById(R.id.widgetContainer)
-        
-        gestureDetector = GestureDetectorCompat(requireContext(), LongPressGestureListener())
-        widgetContainer.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event) }
         
         setupWidgetSystem()
         loadWidgets()
@@ -186,7 +180,7 @@ class WidgetFragment : Fragment() {
         }
     }
     
-    private fun toggleEditMode() {
+    fun toggleEditMode() {
         isEditMode = !isEditMode
         updateEditMode()
         
@@ -206,12 +200,6 @@ class WidgetFragment : Fragment() {
             if (child is ResizableWidgetView) {
                 child.setEditMode(isEditMode)
             }
-        }
-    }
-    
-    inner class LongPressGestureListener : GestureDetector.SimpleOnGestureListener() {
-        override fun onLongPress(e: MotionEvent) {
-            toggleEditMode()
         }
     }
     
