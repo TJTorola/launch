@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.WindowManager
@@ -60,6 +62,7 @@ class MainActivity : AppCompatActivity(),
     private fun showAppDrawer() {
         if (isAppDrawerVisible) return
         isAppDrawerVisible = true
+        hapticFeedback()
         
         appDrawerFragment = AppDrawerFragment()
         fragmentManager.beginTransaction()
@@ -74,6 +77,11 @@ class MainActivity : AppCompatActivity(),
         appDrawerFragment = null
         
         fragmentManager.popBackStack("app_drawer", FragmentManager.POP_BACK_STACK_INCLUSIVE)
+    }
+    
+    private fun hapticFeedback() {
+        val vibrator = getSystemService(Vibrator::class.java)
+        vibrator?.vibrate(VibrationEffect.createOneShot(10, 50))
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
