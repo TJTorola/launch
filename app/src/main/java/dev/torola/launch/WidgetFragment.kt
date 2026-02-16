@@ -99,42 +99,35 @@ class WidgetFragment : Fragment() {
                 val minHeightPx = (widgetInfo.minHeight * density).toInt()
                 
                 val defaultCellWidth = if (storedCellWidth > 0) {
-                    storedCellWidth
-                } else {
-                    ResizableWidgetView.pixelsToCells(minWidthPx).coerceAtLeast(1)
-                }
-                val defaultCellHeight = if (storedCellHeight > 0) {
-                    storedCellHeight
-                } else {
-                    ResizableWidgetView.pixelsToCells(minHeightPx).coerceAtLeast(1)
-                }
-                
-                val defaultCellX = if (storedCellX >= 0) storedCellX else 0
-                val defaultCellY = if (storedCellY >= 0) {
-                    storedCellY
-                } else {
-                    widgetContainer.childCount * (defaultCellHeight + 1)
-                }
-                
-                val widthPx = ResizableWidgetView.cellsToPixels(defaultCellWidth)
-                val heightPx = ResizableWidgetView.cellsToPixels(defaultCellHeight)
-                val xPx = ResizableWidgetView.cellsToPixels(defaultCellX)
-                val yPx = ResizableWidgetView.cellsToPixels(defaultCellY)
+                        storedCellWidth
+                    } else {
+                        ResizableWidgetView.pixelsToCells(widgetContainer, minWidthPx, true)
+                    }
+                    val defaultCellHeight = if (storedCellHeight > 0) {
+                        storedCellHeight
+                    } else {
+                        ResizableWidgetView.pixelsToCells(widgetContainer, minHeightPx, false)
+                    }
+                    
+                    val defaultCellX = if (storedCellX >= 0) storedCellX else 0
+                    val defaultCellY = if (storedCellY >= 0) {
+                        storedCellY
+                    } else {
+                        widgetContainer.childCount * (defaultCellHeight + 1)
+                    }
+                    
+                    val widthPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellWidth, true)
+                    val heightPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellHeight, false)
+                    val xPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellX, true).toFloat()
+                    val yPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellY, false).toFloat()
 
-                val containerWidth = if (widgetContainer.width > 0) widgetContainer.width else Int.MAX_VALUE
-                val containerHeight = if (widgetContainer.height > 0) widgetContainer.height else Int.MAX_VALUE
-                val maxWidth = containerWidth - xPx
-                val maxHeight = containerHeight - yPx
-                val constrainedWidthPx = if (maxWidth > ResizableWidgetView.GRID_CELL_SIZE) {
-                    widthPx.coerceIn(ResizableWidgetView.GRID_CELL_SIZE, maxWidth)
-                } else {
-                    widthPx
-                }
-                val constrainedHeightPx = if (maxHeight > ResizableWidgetView.GRID_CELL_SIZE) {
-                    heightPx.coerceIn(ResizableWidgetView.GRID_CELL_SIZE, maxHeight)
-                } else {
-                    heightPx
-                }
+                    val containerWidth = if (widgetContainer.width > 0) widgetContainer.width else Int.MAX_VALUE
+                    val containerHeight = if (widgetContainer.height > 0) widgetContainer.height else Int.MAX_VALUE
+                    val maxWidth = containerWidth - xPx.toInt()
+                    val maxHeight = containerHeight - yPx.toInt()
+                    
+                    val constrainedWidthPx = widthPx.coerceIn(ResizableWidgetView.cellsToPixels(widgetContainer, 1, true), maxWidth)
+                    val constrainedHeightPx = heightPx.coerceIn(ResizableWidgetView.cellsToPixels(widgetContainer, 1, false), maxHeight)
                 
                 val resizableWidget = ResizableWidgetView(
                     requireContext(),
