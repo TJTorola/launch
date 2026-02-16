@@ -44,7 +44,6 @@ class WidgetManagementActivity : AppCompatActivity() {
             // Widget configured successfully, save it
             if (pendingWidgetId != -1) {
                 saveWidget(pendingWidgetId)
-                Toast.makeText(this, "Widget added. Long-press to enter edit mode.", Toast.LENGTH_SHORT).show()
             }
         } else {
             // Configuration cancelled, clean up widget ID
@@ -221,7 +220,6 @@ class WidgetManagementActivity : AppCompatActivity() {
         } else {
             // No configuration needed, save directly
             saveWidget(widgetId)
-            Toast.makeText(this, "Widget added. Long-press to enter edit mode.", Toast.LENGTH_SHORT).show()
             loadWidgets()
         }
     }
