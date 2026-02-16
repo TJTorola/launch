@@ -2,11 +2,12 @@ package dev.torola.launch
 
 import android.content.Context
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 
@@ -184,12 +185,8 @@ class WidgetFragment : Fragment() {
         isEditMode = !isEditMode
         updateEditMode()
         
-        val message = if (isEditMode) {
-            "Widget edit mode enabled. Long-press widgets to move/resize."
-        } else {
-            "Widget edit mode disabled"
-        }
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        val vibrator = requireContext().getSystemService(Vibrator::class.java)
+        vibrator?.vibrate(VibrationEffect.createOneShot(10, 50))
     }
     
     private fun updateEditMode() {
