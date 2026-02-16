@@ -5,24 +5,11 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.TypedValue
 import android.view.View
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-
-private val Context.dp: Float
-    get() = resources.displayMetrics.density
-
-private fun Float.dpToPx(): Int = (this * 72f / 96f).toInt()
 
 /**
  * Overlay view that displays grid dots to show the widget positioning grid
  */
 class GridOverlayView(context: Context) : View(context) {
-    
-    companion object {
-        const val PADDING_DP = 32f
-        const val CELL_COUNT_X = 5
-        const val CELL_COUNT_Y = 10
-    }
     
     private val dotPaint = Paint().apply {
         val typedValue = TypedValue()
@@ -50,30 +37,18 @@ class GridOverlayView(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         
-        // Get the system window insets (status bar height + navigation bar height)
-        val insets = ViewCompat.getRootWindowInsets(this) ?: return
-        val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-        
-        // Calculate drawable bounds within content area
-        val paddingPx = PADDING_DP.dpToPx()
-        val startX = (systemBars.left + paddingPx)
-        val endX = (width - systemBars.right - paddingPx)
-        val startY = (systemBars.top + paddingPx)
-        val endY = (height - systemBars.bottom - paddingPx)
-        
-        // Calculate cell sizes within bounds
-        val dx = (endX - startX) / CELL_COUNT_X
-        val dy = (endY - startY) / CELL_COUNT_Y
+        val bounds = GridCalculator.calculateGridBounds(this)
+        val cells = GridCalculator.calculateCellDimensions(this)
         
         // Draw dots at grid intersections
-        var y = startY
-        while (y <= endY) {
-            var x = startX
-            while (x <= endX) {
-                canvas.drawCircle(x.toFloat(), y.toFloat(), dotRadius, dotPaint)
-                x += dx
+        var y = bounds.startY
+        while (y <= bounds.endY) {
+            var x = bounds.startX
+            while (x <= bounds.endX) {
+                canvas.drawCircle(x, y, dotRadius, dotPaint)
+                x += cells.dx
             }
-            y += dy
+            y += cells.dy
         }
     }
 }

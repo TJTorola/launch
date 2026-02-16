@@ -101,12 +101,16 @@ class WidgetFragment : Fragment() {
                 val defaultCellWidth = if (storedCellWidth > 0) {
                         storedCellWidth
                     } else {
-                        ResizableWidgetView.pixelsToCells(widgetContainer, minWidthPx, true)
+                        val cells = GridCalculator.calculateCellDimensions(widgetContainer)
+                        val bounds = GridCalculator.calculateGridBounds(widgetContainer)
+                        GridCalculator.pixelsToCellsX(minWidthPx.toFloat(), bounds, cells)
                     }
                     val defaultCellHeight = if (storedCellHeight > 0) {
                         storedCellHeight
                     } else {
-                        ResizableWidgetView.pixelsToCells(widgetContainer, minHeightPx, false)
+                        val cells = GridCalculator.calculateCellDimensions(widgetContainer)
+                        val bounds = GridCalculator.calculateGridBounds(widgetContainer)
+                        GridCalculator.pixelsToCellsY(minHeightPx.toFloat(), bounds, cells)
                     }
                     
                     val defaultCellX = if (storedCellX >= 0) storedCellX else 0
@@ -116,18 +120,21 @@ class WidgetFragment : Fragment() {
                         widgetContainer.childCount * (defaultCellHeight + 1)
                     }
                     
-                    val widthPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellWidth, true)
-                    val heightPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellHeight, false)
-                    val xPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellX, true).toFloat()
-                    val yPx = ResizableWidgetView.cellsToPixels(widgetContainer, defaultCellY, false).toFloat()
+                    val cells = GridCalculator.calculateCellDimensions(widgetContainer)
+                    val bounds = GridCalculator.calculateGridBounds(widgetContainer)
+                    
+                    val widthPx = GridCalculator.cellsToPixelsWidth(defaultCellWidth, cells).toInt()
+                    val heightPx = GridCalculator.cellsToPixelsHeight(defaultCellHeight, cells).toInt()
+                    val xPx = GridCalculator.cellsToPixelsX(defaultCellX, bounds, cells).toInt().toFloat()
+                    val yPx = GridCalculator.cellsToPixelsY(defaultCellY, bounds, cells).toInt().toFloat()
 
                     val containerWidth = if (widgetContainer.width > 0) widgetContainer.width else Int.MAX_VALUE
                     val containerHeight = if (widgetContainer.height > 0) widgetContainer.height else Int.MAX_VALUE
                     val maxWidth = containerWidth - xPx.toInt()
                     val maxHeight = containerHeight - yPx.toInt()
                     
-                    val constrainedWidthPx = widthPx.coerceIn(ResizableWidgetView.cellsToPixels(widgetContainer, 1, true), maxWidth)
-                    val constrainedHeightPx = heightPx.coerceIn(ResizableWidgetView.cellsToPixels(widgetContainer, 1, false), maxHeight)
+                    val constrainedWidthPx = widthPx.coerceIn(cells.dx.toInt(), maxWidth)
+                    val constrainedHeightPx = heightPx.coerceIn(cells.dy.toInt(), maxHeight)
                 
                 val resizableWidget = ResizableWidgetView(
                     requireContext(),
